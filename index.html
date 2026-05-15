@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kiosk Game Selection</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="kiosk-wrapper">
+        <header class="kiosk-header">
+            <h1><span>게임</span> 선택</h1>
+            <p>플레이할 게임을 터치하세요</p>
+        </header>
+
+        <main class="game-grid">
+            <button class="game-item" onclick="location.href='Games/sotteok-game/index.html'">
+                <span>소떡소떡 만들기</span>
+            </button>
+            <button class="game-item" onclick="location.href='Games/spot-difference-game/index.html'">
+                <span>틀린그림 찾기</span>
+            </button>
+            <button class="game-item" onclick="location.href='Games/card-flip-game/index.html'">
+                <span>같은 그림 뒤집기</span>
+            </button>
+            <button class="game-item" onclick="location.href='Games/suika-game/index.html'">
+                <span>안성 배 만들기</span>
+            </button>
+            <button class="game-item" onclick="location.href='Games/new-run-game/index.html'">
+                <span>러닝 게임</span>
+            </button>
+            <button class="game-item highlight" onclick="location.href='Games/half-cutting-game/index.html'">
+                <span>반반 챌린지</span>
+            </button>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

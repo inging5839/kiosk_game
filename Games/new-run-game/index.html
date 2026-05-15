@@ -1,0 +1,643 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>달리기 러너</title>
+<link rel="stylesheet" href="../../assets/kiosk-keyboard.css">
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+html, body { width: 100%; height: 100%; }
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+body {
+  background: #000;
+  overflow: hidden;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+button { font-family: inherit; }
+
+#gr {
+  width: 2160px;
+  height: 3840px;
+  background: #0d0d14;
+  color: #fff;
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scr { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.scr.on { display: flex; }
+
+#ss { gap: 60px; padding: 120px 70px; text-align: center; }
+.gtitle { font-size: 17rem; line-height: 1.05; font-weight: 800; color: #fff; }
+.gtitle span { color: #f0c040; }
+.gdesc { max-width: 1180px; font-size: 5rem; color: #999; line-height: 1.65; font-weight: 500; }
+.tags { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; max-width: 1500px; }
+.tag { background: #1e1e2c; color: #aaa; font-size: 4rem; font-weight: 700; padding: 18px 34px; border-radius: 60px; border: 3px solid #333; }
+.tag.warn { color: #ff9999; background: #2a1010; border-color: #ff555566; }
+.sbtn, .rbtn {
+  margin-top: 48px;
+  padding: 48px 156px;
+  font-size: 5rem;
+  font-weight: 800;
+  background: #f0c040;
+  color: #111;
+  border: none;
+  border-radius: 150px;
+  cursor: pointer;
+  transition: transform .2s, background .2s;
+}
+.sbtn:hover, .rbtn:hover { background: #ffd84d; transform: scale(1.03); }
+
+#gs { padding: 60px 50px 70px; gap: 0; justify-content: flex-start; }
+.hud { width: 100%; height: 30vh; display: flex; justify-content: space-between; align-items: center; padding: 0 20px 40px; }
+.hi { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 360px; }
+.hl { font-size: 5rem; color: #555; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+.hv { font-size: 10rem; font-weight: 700; color: #fff; line-height: 1.1; }
+.hv.score { color: #f0c040; }
+.hearts { display: flex; gap: 24px; align-items: center; justify-content: center; height: 120px; }
+.heart { width: 72px; height: 72px; color: #2a2a3a; transition: color .2s, transform .2s; }
+.heart.on { color: #ff5555; transform: scale(1.05); }
+.cwrap { position: relative; width: 1960px; height: 2680px; display: flex; align-items: center; justify-content: center; }
+#game { width: 1960px; height: 2680px; display: block; border-radius: 36px; touch-action: none; background: #07140a; }
+.inst { font-size: 7rem; color: #777; margin-top: 50px; text-align: center; font-weight: 500; }
+.playinfo { display: flex; flex-direction: column; align-items: center; gap: 24px; margin-top: 46px; }
+.inst { margin-top: 0; }
+.scoreguide { display: flex; gap: 24px; flex-wrap: wrap; justify-content: center; max-width: 1600px; }
+.scorepill { background: #161622; border: 3px solid #333; color: #aaa; border-radius: 60px; padding: 18px 34px; font-size: 4rem; font-weight: 800; line-height: 1; }
+.scorepill.good { color: #f0c040; border-color: #f0c04044; background: #2a2208; }
+.scorepill.bad { color: #ff9999; border-color: #ff555566; background: #2a1010; }
+.flash { position: absolute; inset: 0; border-radius: 36px; pointer-events: none; opacity: 0; transition: opacity .18s; }
+.flash.hit { opacity: 1; background: rgba(255, 85, 85, .26); }
+.flash.pick { opacity: 1; background: rgba(240, 192, 64, .20); }
+
+#rs { gap: 48px; padding: 84px 60px; text-align: center; }
+.rtitle { font-size: 10rem; font-weight: 800; color: #fff; }
+.slist { width: 100%; max-width: 960px; display: flex; flex-direction: column; gap: 24px; }
+.srow { display: flex; align-items: center; justify-content: space-between; background: #161622; border-radius: 30px; padding: 30px 42px; }
+.slabel { font-size: 5rem; color: #ccc; font-weight: 600; }
+.spts { font-size: 6rem; font-weight: 800; color: #f0c040; }
+.total { width: 100%; max-width: 960px; background: #1a1a28; border-radius: 42px; padding: 60px; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 3px solid #f0c04030; }
+.tlabel { font-size: 5rem; color: #777; font-weight: 500; }
+.tval { font-size: 10rem; font-weight: 800; color: #f0c040; line-height: 1.1; }
+.tbest { font-size: 4rem; color: #aaa; font-weight: 700; }
+.tgrade { font-size: 5.5rem; font-weight: 700; color: #fff; margin-top: 10px; line-height: 1.35; }
+
+/* 점수 등록 / 다시 하기 보조 버튼 */
+.rbtn.alt { background: #1e1e2c; color: #f0c040; border: 4px solid #f0c040; }
+.rbtn.alt:disabled { background: #1a1a22; color: #555; border-color: #444; cursor: not-allowed; }
+.rbtn:disabled { background: #555; color: #999; cursor: not-allowed; }
+
+/* 닉네임 등록 모달 */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal-overlay.on { display: flex; }
+.modal-card { width: min(1500px, 90%); background: #161622; border-radius: 60px; padding: 96px 84px; display: flex; flex-direction: column; align-items: center; gap: 48px; border: 4px solid #f0c04055; box-shadow: 0 60px 180px rgba(0,0,0,0.7); }
+.modal-title { font-size: 7rem; font-weight: 800; color: #fff; text-align: center; }
+.modal-sub { font-size: 4.2rem; color: #888; text-align: center; line-height: 1.4; }
+.nickinput { width: 100%; max-width: 1100px; font-size: 6rem; padding: 48px 60px; background: #0d0d14; color: #fff; border: 4px solid #333; border-radius: 36px; text-align: center; font-family: inherit; outline: none; }
+.nickinput:focus { border-color: #f0c040; }
+.modal-btnrow { display: flex; gap: 36px; width: 100%; justify-content: center; flex-wrap: wrap; }
+.modal-btn { padding: 42px 96px; font-size: 5.5rem; font-weight: 800; border: none; border-radius: 120px; cursor: pointer; white-space: nowrap; }
+.modal-btn.primary { background: #f0c040; color: #111; }
+.modal-btn.primary:disabled { background: #555; color: #999; cursor: not-allowed; }
+.modal-btn.ghost { background: transparent; color: #aaa; border: 4px solid #444; }
+.nickmsg { font-size: 4.2rem; color: #aaa; min-height: 1.2em; text-align: center; }
+.nickmsg.ok { color: #4CAF50; }
+.nickmsg.warn { color: #f0a040; }
+.nickmsg.err { color: #ff5555; }
+</style>
+</head>
+<body>
+<div id="gr">
+  <div id="ss" class="scr on">
+    <div class="gtitle"><span>달리기</span> 러너</div>
+    <p class="gdesc">좌우로 움직이며 특산품을 모으고<br>장애물을 피하세요.<br>시간이 지날수록 점점 더 빨라집니다.</p>
+    <div class="tags">
+      <span class="tag">3개 레인</span>
+      <span class="tag">고기 +50점</span>
+      <span class="tag">배 +30점</span>
+      <span class="tag">포도 +20점</span>
+      <span class="tag warn">충돌 주의</span>
+    </div>
+    <button class="sbtn" id="startBtn">게임 시작</button>
+    <button class="sbtn" id="backBtn" style="margin-top: 40px; background: #444; color: #fff;" onclick="location.href='../../index.html'">돌아가기</button>
+  </div>
+
+  <div id="gs" class="scr">
+    <div class="hud">
+      <div class="hi"><span class="hl">SCORE</span><span class="hv score" id="scoreText">0</span></div>
+      <div class="hi"><span class="hl">LIFE</span><div class="hearts" id="heartBox"></div></div>
+      <div class="hi"><span class="hl">SPEED</span><span class="hv" id="speedText">0</span></div>
+    </div>
+    <div class="cwrap">
+      <canvas id="game" width="1080" height="1920"></canvas>
+      <div class="flash" id="flash"></div>
+    </div>
+    <div class="playinfo">
+      <p class="inst">바우돌이의 좌우를 터치하면서 움직이세요!<br> 아이템을 모으고 장애물을 피하세요</p>
+      <div class="scoreguide" aria-label="아이템 점수 안내">
+        <span class="scorepill good">고기 +50</span>
+        <span class="scorepill good">배 +30</span>
+        <span class="scorepill good">포도 +20</span>
+        <span class="scorepill bad">장애물 -HP</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="rs" class="scr">
+    <div class="rtitle">게임 종료</div>
+    <div class="total">
+      <span class="tlabel">최종 점수</span>
+      <span class="tval" id="finalScore">0</span>
+      <span class="tbest">최고 점수 <span id="bestScoreText">0</span></span>
+    </div>
+    <div class="slist">
+      <div class="srow"><span class="slabel">이동 거리</span><span class="spts" id="distanceText">0m</span></div>
+      <div class="srow"><span class="slabel">플레이 시간</span><span class="spts" id="timeText">0초</span></div>
+      <div class="srow"><span class="slabel">고기 획득</span><span class="spts" id="meatCountText">0개</span></div>
+      <div class="srow"><span class="slabel">배 획득</span><span class="spts" id="pearCountText">0개</span></div>
+      <div class="srow"><span class="slabel">포도 획득</span><span class="spts" id="grapeCountText">0개</span></div>
+    </div>
+    <button class="rbtn" id="registerBtn">점수 등록</button>
+    <button class="rbtn alt" id="againBtn">다시 하기</button>
+  </div>
+
+  <div class="modal-overlay" id="nickModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-title" id="modalTitle">닉네임 등록</div>
+      <div class="modal-sub">랭킹에 표시될 닉네임을 입력하세요<br><span id="modalScore" style="color:#f0c040;font-weight:700;"></span></div>
+      <input class="nickinput" id="nickInput" type="text" maxlength="20" placeholder="닉네임 (최대 20자)" autocomplete="off" readonly inputmode="none">
+      <div class="nickmsg" id="nickMsg"></div>
+      <div class="kkb" id="kkb"></div>
+      <div class="modal-btnrow">
+        <button class="modal-btn ghost" id="cancelBtn">취소</button>
+        <button class="modal-btn primary" id="saveBtn">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/hangul.min.js"></script>
+<script src="../../assets/kiosk-keyboard.js"></script>
+<script>
+function resizeKiosk() {
+  var vw = document.documentElement.clientWidth || window.innerWidth;
+  var vh = document.documentElement.clientHeight || window.innerHeight;
+  var scale = Math.min(vw / 2160, vh / 3840);
+  document.getElementById('gr').style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+}
+window.addEventListener('resize', resizeKiosk);
+resizeKiosk();
+
+var canvas = document.getElementById('game');
+var ctx = canvas.getContext('2d', { alpha: false });
+var W = 1080, H = 1920;
+var TRACK_X = 200, TRACK_W = 680, LANES = 3, LANE_W = TRACK_W / LANES;
+var CHAR_Y = H - 350;
+var FPS = 30, FRAME_MS = 1000 / FPS, MAX_LIVES = 3;
+var ITEM_DRAW_SCALE = 1.2;
+var HIT_INVINCIBLE_FRAMES = 25;
+var MAX_GAME_SPEED = 70;
+var MAX_RUN_ANIM_STEPS_PER_SECOND = 12;
+var LANE_MOVE_RESPONSIVENESS = 0.7;
+var S = { TITLE: 0, PLAY: 1, OVER: 2 };
+var state = S.TITLE;
+var score = 0, lives = MAX_LIVES, speed = 24, highScore = 0, gameTime = 0, distanceTraveled = 0;
+var itemsCollected = { meat: 0, pear: 0, grape: 0 };
+var charTargetLane = 1, charX = TRACK_X + LANE_W * 1.5;
+var hitFx = 0, pickFx = 0, invincible = 0, lastObsLane = -1;
+var pendingObstacleLane = -1;
+var runAnimPhase = 0;
+var entities = [];
+var bgScroll = 0, lastTime = 0;
+var trackOverlayCanvas = document.createElement('canvas');
+var trackOverlayCtx = trackOverlayCanvas.getContext('2d');
+trackOverlayCanvas.width = W;
+trackOverlayCanvas.height = H;
+
+var bgImg = new Image();
+var sprFrames = [new Image(), new Image()];
+var bgLoaded = false, sprLoaded = [false, false];
+bgImg.onload = function() { bgLoaded = true; };
+sprFrames[0].onload = function() { sprLoaded[0] = true; };
+sprFrames[1].onload = function() { sprLoaded[1] = true; };
+bgImg.src = 'bg.png';
+sprFrames[0].src = 's_1.png';
+sprFrames[1].src = 's_2.png';
+
+var ITEM_DEFS = {
+  meat:  { kind: 'reward',   src: 'meat.png',  points: 50, drawW: 128, drawH: 128, hitW: 90,  hitH: 100, fallback: '#d45138', label: 'M' },
+  pear:  { kind: 'reward',   src: 'pear.png',  points: 30, drawW: 122, drawH: 122, hitW: 86,  hitH: 98,  fallback: '#b8d94c', label: 'P' },
+  grape: { kind: 'reward',   src: 'grape.png', points: 20, drawW: 122, drawH: 122, hitW: 86,  hitH: 98,  fallback: '#7d4bc8', label: 'G' },
+  cone:  { kind: 'obstacle', src: 'cone.png',  points: 0,  drawW: 150, drawH: 150, hitW: 88,  hitH: 112, fallback: '#f07b24', label: '!' },
+  trash: { kind: 'obstacle', src: 'trash.png', points: 0,  drawW: 154, drawH: 154, hitW: 100, hitH: 116, fallback: '#708090', label: '!' },
+};
+var REWARD_TYPES = ['meat', 'pear', 'grape'];
+var OBSTACLE_TYPES = ['cone', 'trash'];
+var itemImages = {};
+
+Object.keys(ITEM_DEFS).forEach(function(type) {
+  var img = new Image();
+  img.src = ITEM_DEFS[type].src;
+  itemImages[type] = img;
+});
+
+var scoreText = document.getElementById('scoreText');
+var speedText = document.getElementById('speedText');
+var heartBox = document.getElementById('heartBox');
+var flash = document.getElementById('flash');
+var heartIcons = [];
+var lastScoreText = '';
+var lastSpeedText = '';
+var lastLives = -1;
+
+function showScr(id) {
+  var screens = document.querySelectorAll('.scr');
+  for (var i = 0; i < screens.length; i++) screens[i].classList.remove('on');
+  document.getElementById(id).classList.add('on');
+}
+
+function updateHud() {
+  var nextScoreText = score.toLocaleString();
+  var nextSpeedText = speed.toFixed(0);
+
+  if (nextScoreText !== lastScoreText) {
+    scoreText.textContent = nextScoreText;
+    lastScoreText = nextScoreText;
+  }
+  if (nextSpeedText !== lastSpeedText) {
+    speedText.textContent = nextSpeedText;
+    lastSpeedText = nextSpeedText;
+  }
+
+  if (heartIcons.length === 0) {
+    for (var i = 0; i < MAX_LIVES; i++) {
+      var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.innerHTML = '<path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.08C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>';
+      heartIcons.push(svg);
+      heartBox.appendChild(svg);
+    }
+  }
+
+  if (lives !== lastLives) {
+    for (var j = 0; j < heartIcons.length; j++) {
+      heartIcons[j].setAttribute('class', 'heart' + (j < lives ? ' on' : ''));
+    }
+    lastLives = lives;
+  }
+}
+
+function pulseFlash(type) {
+  flash.className = 'flash ' + type;
+  window.setTimeout(function() { flash.className = 'flash'; }, 140);
+}
+
+function moveByTap(clientX) {
+  if (state !== S.PLAY) return;
+  var r = canvas.getBoundingClientRect();
+  var tx = (clientX - r.left) / r.width * W;
+  if (tx < charX) charTargetLane = Math.max(0, charTargetLane - 1);
+  else if (tx > charX) charTargetLane = Math.min(LANES - 1, charTargetLane + 1);
+}
+
+function startGame() {
+  state = S.PLAY;
+  showScr('gs');
+  score = 0; lives = MAX_LIVES; speed = 24; gameTime = 0; distanceTraveled = 0;
+  itemsCollected.meat = 0; itemsCollected.pear = 0; itemsCollected.grape = 0;
+  charTargetLane = 1; charX = TRACK_X + LANE_W * 1.5;
+  hitFx = 0; pickFx = 0; invincible = 0; lastObsLane = -1; pendingObstacleLane = -1; runAnimPhase = 0; bgScroll = 0;
+  entities.length = 0;
+  updateHud();
+}
+
+function endGame() {
+  if (score > highScore) highScore = score;
+  state = S.OVER;
+  document.getElementById('finalScore').textContent = score.toLocaleString();
+  document.getElementById('distanceText').textContent = Math.floor(distanceTraveled / 10).toLocaleString() + 'm';
+  document.getElementById('timeText').textContent = Math.floor(gameTime).toLocaleString() + '초';
+  document.getElementById('bestScoreText').textContent = highScore.toLocaleString();
+  document.getElementById('meatCountText').textContent = itemsCollected.meat.toLocaleString() + '개';
+  document.getElementById('pearCountText').textContent = itemsCollected.pear.toLocaleString() + '개';
+  document.getElementById('grapeCountText').textContent = itemsCollected.grape.toLocaleString() + '개';
+  var regBtn = document.getElementById('registerBtn');
+  regBtn.disabled = false;
+  regBtn.textContent = '점수 등록';
+  regBtn.dataset.score = String(score);
+  regBtn.dataset.saved = '0';
+  showScr('rs');
+}
+
+function bindBtn(id, fn) {
+  var btn = document.getElementById(id);
+  if (window.PointerEvent) {
+    btn.addEventListener('pointerdown', function(e) { e.preventDefault(); fn(); });
+  } else {
+    btn.addEventListener('click', fn);
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); fn(); }, { passive: false });
+  }
+}
+bindBtn('startBtn', startGame);
+bindBtn('againBtn', function() { showScr('ss'); state = S.TITLE; });
+bindBtn('registerBtn', openNickModal);
+bindBtn('saveBtn', submitScore);
+bindBtn('cancelBtn', closeNickModal);
+
+// 랭킹 서버 주소
+var RANKING_API = (location.protocol === 'http:' || location.protocol === 'https:') ? '/api/ranking' : 'http://localhost:3000/api/ranking';
+var GAME_INDEX = 5; // 달리기 러너
+
+function setNickMsg(text, kind) { var el = document.getElementById('nickMsg'); el.textContent = text || ''; el.className = 'nickmsg' + (kind ? ' ' + kind : ''); }
+function openNickModal() {
+  var regBtn = document.getElementById('registerBtn');
+  if (regBtn.dataset.saved === '1') return;
+  var modal = document.getElementById('nickModal');
+  var input = document.getElementById('nickInput');
+  var saveBtn = document.getElementById('saveBtn');
+  var cancelBtn = document.getElementById('cancelBtn');
+  var scoreLabel = document.getElementById('modalScore');
+  var sv = parseInt(regBtn.dataset.score || '0', 10) || 0;
+  scoreLabel.textContent = '내 점수: ' + sv.toLocaleString() + '점';
+  input.value = ''; input.disabled = false;
+  saveBtn.disabled = false; saveBtn.textContent = '등록';
+  cancelBtn.disabled = false;
+  setNickMsg('');
+  modal.classList.add('on'); modal.setAttribute('aria-hidden', 'false');
+  Kkb.init(input);
+}
+function closeNickModal() { var modal = document.getElementById('nickModal'); modal.classList.remove('on'); modal.setAttribute('aria-hidden', 'true'); }
+function submitScore() {
+  var input = document.getElementById('nickInput');
+  var saveBtn = document.getElementById('saveBtn');
+  var cancelBtn = document.getElementById('cancelBtn');
+  var regBtn = document.getElementById('registerBtn');
+  var nickname = (input.value || '').trim();
+  if (!nickname) { setNickMsg('닉네임을 입력해주세요.', 'err'); return; }
+  if (nickname.length > 20) { setNickMsg('닉네임은 20자 이하여야 합니다.', 'err'); return; }
+  var sv = parseInt(regBtn.dataset.score || '0', 10) || 0;
+  var imageIndex = Math.floor(Math.random() * 15);
+  saveBtn.disabled = true; cancelBtn.disabled = true; input.disabled = true;
+  setNickMsg('등록 중...', '');
+  fetch(RANKING_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nickname: nickname, score: sv, game_index: GAME_INDEX, image_index: imageIndex })
+  })
+  .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
+  .then(function(res) {
+    if (!res.ok) {
+      var msg = (res.body && res.body.error) ? res.body.error : '등록에 실패했습니다.';
+      setNickMsg(msg, 'err');
+      saveBtn.disabled = false; cancelBtn.disabled = false; input.disabled = false;
+      return;
+    }
+    var saved = res.body.nickname || nickname;
+    if (res.body.tagged) setNickMsg('중복 닉네임이라 "' + saved + '"(으)로 등록되었습니다.', 'warn');
+    else setNickMsg('"' + saved + '" 등록 완료!', 'ok');
+    regBtn.dataset.saved = '1';
+    regBtn.disabled = true;
+    regBtn.textContent = '등록 완료';
+    setTimeout(closeNickModal, 1400);
+  })
+  .catch(function(err) {
+    console.error('점수 등록 오류:', err);
+    setNickMsg('서버에 연결할 수 없습니다.', 'err');
+    saveBtn.disabled = false; cancelBtn.disabled = false; input.disabled = false;
+  });
+}
+document.getElementById('nickModal').addEventListener('click', function(e) { if (e.target === this) closeNickModal(); });
+document.getElementById('nickInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); submitScore(); }
+  else if (e.key === 'Escape') { e.preventDefault(); closeNickModal(); }
+});
+
+if (window.PointerEvent) {
+  canvas.addEventListener('pointerdown', function(e) {
+    e.preventDefault();
+    moveByTap(e.clientX);
+  });
+} else {
+  canvas.addEventListener('click', function(e) {
+    moveByTap(e.clientX);
+  });
+  canvas.addEventListener('touchstart', function(e) {
+    if (e.cancelable) e.preventDefault();
+    moveByTap(e.touches[0].clientX);
+  }, { passive: false });
+}
+
+function calculateSpeed(time) {
+  if (time <= 5) return 25 + (time / 5) * 15;
+  if (time <= 25) return 40 + ((time - 5) / 20) * 10;
+  var phaseTime = time - 25;
+  var cTime = phaseTime % 20;
+  var cycleCount = Math.floor(phaseTime / 20);
+  if (cTime < 5) {
+    var startSpeed = cycleCount === 0 ? 50 : 60;
+    return startSpeed + (cTime / 5) * (75 - startSpeed);
+  }
+  if (cTime < 15) return 75;
+  return 75 - ((cTime - 15) / 5) * 15;
+}
+
+function randomFrom(list) {
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function update(dt) {
+  if (state !== S.PLAY) return;
+  var prevTime = gameTime;
+  gameTime += dt;
+  speed = calculateSpeed(gameTime);
+  distanceTraveled += speed * dt;
+  if (Math.floor(gameTime / 5) > Math.floor(prevTime / 5)) score += 10;
+  runAnimPhase = (runAnimPhase + (speed / MAX_GAME_SPEED) * MAX_RUN_ANIM_STEPS_PER_SECOND * dt) % 2;
+
+  var targetX = TRACK_X + LANE_W * (charTargetLane + 0.5);
+  charX += (targetX - charX) * LANE_MOVE_RESPONSIVENESS;
+  bgScroll = (bgScroll + speed * 0.7) % H;
+  if (hitFx > 0) hitFx--;
+  if (pickFx > 0) pickFx--;
+  if (invincible > 0) invincible--;
+
+  for (var i = entities.length - 1; i >= 0; i--) {
+    entities[i].y += speed;
+    if (entities[i].y > H + 120) entities.splice(i, 1);
+  }
+
+  var spawnGap = Math.max(250, 1000 - Math.sqrt(speed) * 80);
+  var topY = Infinity;
+  for (var j = 0; j < entities.length; j++) if (entities[j].y < topY) topY = entities[j].y;
+  if (topY > spawnGap || topY === Infinity) {
+    var spawnProb = Math.min(0.75, 0.4 + speed / 200);
+    if (Math.random() < spawnProb) {
+      var itemProb = Math.max(0.25, Math.min(0.55, 0.45 - ((speed - 25) / 65) * 0.30));
+      if (pendingObstacleLane >= 0) {
+        lastObsLane = pendingObstacleLane;
+        entities.push({ type: randomFrom(OBSTACLE_TYPES), lane: pendingObstacleLane, y: -150 });
+        pendingObstacleLane = -1;
+      } else if (Math.random() < itemProb) {
+        var rewardLane = Math.floor(Math.random() * LANES);
+        entities.push({ type: randomFrom(REWARD_TYPES), lane: rewardLane, y: -150 });
+        pendingObstacleLane = rewardLane;
+      } else {
+        var nextLane;
+        do { nextLane = Math.floor(Math.random() * LANES); } while (nextLane === lastObsLane);
+        lastObsLane = nextLane;
+        entities.push({ type: randomFrom(OBSTACLE_TYPES), lane: nextLane, y: -150 });
+      }
+    }
+  }
+
+  var charCY = CHAR_Y - 100;
+  for (var k = entities.length - 1; k >= 0; k--) {
+    var e = entities[k];
+    var def = ITEM_DEFS[e.type];
+    if (!def) continue;
+    var ex = TRACK_X + LANE_W * (e.lane + 0.5);
+    if (def.kind === 'obstacle' && invincible <= 0 && Math.abs(ex - charX) < def.hitW && Math.abs(e.y - charCY) < def.hitH) {
+      entities.splice(k, 1);
+      lives--; hitFx = HIT_INVINCIBLE_FRAMES; invincible = HIT_INVINCIBLE_FRAMES; pulseFlash('hit');
+      if (lives <= 0) endGame();
+    } else if (def.kind === 'reward' && Math.abs(ex - charX) < def.hitW && Math.abs(e.y - charCY) < def.hitH) {
+      entities.splice(k, 1);
+      itemsCollected[e.type]++;
+      score += def.points;
+    }
+  }
+  updateHud();
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawRewardFallback(x, y, def) {
+  var sz = Math.max(def.drawW, def.drawH) * ITEM_DRAW_SCALE;
+  var grad = ctx.createRadialGradient(x - sz * .18, y - sz * .22, sz * .1, x, y, sz * .55);
+  grad.addColorStop(0, '#fff1a8');
+  grad.addColorStop(.55, def.fallback);
+  grad.addColorStop(1, '#b57916');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.arc(x, y, sz / 2, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#7a4b0e'; ctx.lineWidth = 8; ctx.stroke();
+  ctx.fillStyle = '#111'; ctx.font = '800 ' + (sz * .5) + 'px Pretendard, sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(def.label, x, y + 2);
+}
+
+function drawObstacleFallback(x, y, def) {
+  ctx.save();
+  var w = def.drawW * ITEM_DRAW_SCALE;
+  var h = def.drawH * ITEM_DRAW_SCALE;
+  ctx.fillStyle = def.fallback;
+  roundRect(x - w / 2, y - h / 2, w, h, 24); ctx.fill();
+  ctx.strokeStyle = '#ff5555'; ctx.lineWidth = 8; ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,.75)'; ctx.lineWidth = 12;
+  ctx.beginPath(); ctx.moveTo(x - 34, y - 34); ctx.lineTo(x + 34, y + 34); ctx.moveTo(x + 34, y - 34); ctx.lineTo(x - 34, y + 34); ctx.stroke();
+  ctx.restore();
+}
+
+function drawItem(type, x, y) {
+  var def = ITEM_DEFS[type];
+  var img = itemImages[type];
+  if (!def) return;
+
+  if (img && img.complete && img.naturalWidth > 0) {
+    ctx.save();
+    ctx.imageSmoothingEnabled = true;
+    var drawW = def.drawW * ITEM_DRAW_SCALE;
+    var drawH = def.drawH * ITEM_DRAW_SCALE;
+    ctx.drawImage(img, x - drawW / 2, y - drawH / 2, drawW, drawH);
+    ctx.restore();
+    return;
+  }
+
+  if (def.kind === 'obstacle') drawObstacleFallback(x, y, def);
+  else drawRewardFallback(x, y, def);
+}
+
+function drawTrackOverlay() {
+  var g = trackOverlayCtx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(7,20,10,.14)');
+  g.addColorStop(1, 'rgba(7,20,10,.42)');
+  trackOverlayCtx.clearRect(0, 0, W, H);
+  trackOverlayCtx.fillStyle = g; trackOverlayCtx.fillRect(0, 0, W, H);
+  trackOverlayCtx.fillStyle = 'rgba(13,13,20,.24)';
+  roundRectOn(trackOverlayCtx, TRACK_X, -30, TRACK_W, H + 60, 44); trackOverlayCtx.fill();
+  trackOverlayCtx.strokeStyle = 'rgba(240,192,64,.45)'; trackOverlayCtx.lineWidth = 6; trackOverlayCtx.stroke();
+  trackOverlayCtx.strokeStyle = 'rgba(255,255,255,.20)'; trackOverlayCtx.lineWidth = 4; trackOverlayCtx.setLineDash([36, 32]);
+  for (var i = 1; i < LANES; i++) {
+    trackOverlayCtx.beginPath(); trackOverlayCtx.moveTo(TRACK_X + i * LANE_W, 0); trackOverlayCtx.lineTo(TRACK_X + i * LANE_W, H); trackOverlayCtx.stroke();
+  }
+  trackOverlayCtx.setLineDash([]);
+}
+
+function roundRectOn(targetCtx, x, y, w, h, r) {
+  targetCtx.beginPath();
+  targetCtx.moveTo(x + r, y);
+  targetCtx.arcTo(x + w, y, x + w, y + h, r);
+  targetCtx.arcTo(x + w, y + h, x, y + h, r);
+  targetCtx.arcTo(x, y + h, x, y, r);
+  targetCtx.arcTo(x, y, x + w, y, r);
+  targetCtx.closePath();
+}
+
+function draw() {
+  ctx.fillStyle = '#07140a'; ctx.fillRect(0, 0, W, H);
+  if (bgLoaded) {
+    var lo = bgScroll % H;
+    ctx.drawImage(bgImg, 0, lo, W, H);
+    ctx.drawImage(bgImg, 0, lo - H, W, H);
+  }
+  ctx.drawImage(trackOverlayCanvas, 0, 0);
+
+  for (var i = 0; i < entities.length; i++) {
+    var e = entities[i];
+    var x = TRACK_X + LANE_W * (e.lane + 0.5);
+    drawItem(e.type, x, e.y);
+  }
+
+  var animIdx = Math.floor(runAnimPhase) % 2;
+  if (!(invincible > 0 && Math.floor(gameTime * 20) % 2 === 0)) {
+    ctx.save();
+    if (hitFx > 0) ctx.translate((Math.random() - .5) * 16, 0);
+    if (sprLoaded[animIdx]) ctx.drawImage(sprFrames[animIdx], charX - 110, CHAR_Y - 240, 220, 240);
+    else {
+      ctx.fillStyle = '#f0c040'; roundRect(charX - 55, CHAR_Y - 160, 110, 160, 28); ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function loop(now) {
+  var dt = Math.min(0.05, (now - lastTime) / 1000 || 0);
+  if (now - lastTime >= FRAME_MS) {
+    update(dt);
+    draw();
+    lastTime = now;
+  }
+  requestAnimationFrame(loop);
+}
+drawTrackOverlay();
+updateHud();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

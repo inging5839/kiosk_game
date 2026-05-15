@@ -1,0 +1,177 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+html, body { width: 100%; height: 100%; }
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+body { 
+    margin: 0; background: #000; overflow: hidden; 
+    font-family: 'Pretendard', sans-serif;
+    touch-action: none; overscroll-behavior: none;
+}
+
+#gr { 
+    width: 2160px; height: 3840px;
+    background: #0d0d14; 
+    display: flex; flex-direction: column; align-items: center; justify-content: center; 
+    position: fixed; left: 50%; top: 50%;
+    transform-origin: 50% 50%; overflow: hidden;
+}
+
+.scr { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.scr.on { display: flex; }
+
+/* UI 요소 크기 (절반자르기 기준) */
+#ss { gap: 60px; padding: 120px 60px; }
+.gtitle { font-size: 20rem; font-weight: 800; color: #fff; text-align: center; }
+.gtitle span { color: #f0c040; }
+.gdesc { font-size: 5rem; color: #999; text-align: center; line-height: 1.8; max-width: 900px; }
+/* style.css 수정 및 추가 */
+.tags { 
+    display: flex; 
+    flex-direction: row;      /* 가로 정렬 */
+    flex-wrap: nowrap;        /* 줄 바꿈 절대 금지 */
+    align-items: center;      /* 세로 중앙 정렬 */
+    justify-content: center; 
+    width: 100%;              /* 부모 너비에 맞춤 */
+    padding: 0 40px;
+    gap: 15px;                /* 간격을 좁게 설정하여 한 줄 유지 */
+}
+
+.tag-item {
+    background: rgba(30, 30, 44, 0.6);
+    border: 2px solid #333;
+    border-radius: 30px;
+    padding: 15px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 1;           /* 공간이 부족하면 줄어들게 허용 */
+    min-width: 180px;         /* 최소 너비 확보 */
+}
+
+.tag-item img {
+    width: 90px;              /* 크기를 기존보다 조금 줄임 */
+    height: 90px;
+    object-fit: contain;
+}
+
+.tag-item span {
+    color: #eee;
+    font-size: 2.5rem;        /* 글자 크기 조정 */
+    font-weight: 500;
+}
+
+/* 화살표 스타일 */
+.arrow {
+    font-size: 3rem;
+    color: #555;           /* 수박색과 맞춘 포인트 컬러 */
+    font-weight: bold;
+    flex-shrink: 0;           /* 화살표는 크기가 줄어들지 않음 */
+}
+.tag { background: #1e1e2c; color: #aaa; font-size: 4rem; padding: 10px 22px; border-radius: 60px; border: 3px solid #333; }
+.sbtn { margin-top: 48px; padding: 48px 156px; font-size: 5rem; font-weight: 800; background: #f0c040; color: #111; border: none; border-radius: 150px; cursor: pointer; }
+
+/* 게임 화면 */
+#gs { padding: 60px 50px; justify-content: flex-start; }
+.hud {
+    width: 100%;
+    height: 400px; /* 높이는 적절히 조절 */
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr; /* 3등분 */
+    align-items: center;
+    padding: 0 100px;
+}
+
+.hud-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.hud-item.left { align-items: flex-start; }  /* 왼쪽 정렬 */
+.hud-item.right { align-items: flex-end; }   /* 오른쪽 정렬 */
+
+.hl { font-size: 4rem; color: #777; }
+.hv { font-size: 10rem; }
+
+#next-preview-container {
+    width: 180px;
+    height: 180px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.hl { font-size: 5rem; color: #555; font-weight: 600; }
+.hv { font-size: 10rem; font-weight: 700; color: #fff; margin-left: 20px; }
+.hv.tim { color: #f0c040; }
+
+.game-container {
+    margin-top: 100px; /* 기존 위치보다 아래로 이동 */
+    width: 1800px; height: 2400px;
+    border: 15px solid #1e1e2c; border-radius: 60px;
+    overflow: hidden; background: #ffffff; position: relative;
+    box-sizing: border-box; display: flex;
+}
+#game-area { width: 100%; height: 100%; }
+#game-area canvas { display: block !important; width: 100% !important; height: 100% !important; }
+
+.inst { font-size: 5rem; color: #777; margin-top: 50px; margin-bottom: 50px;text-align: center; }
+
+/* 결과 화면 */
+.rtitle { font-size: 10rem; font-weight: 800; color: #fff; margin-bottom: 50px; }
+.total { width: 1500px; background: #1a1a28; border-radius: 60px; padding: 100px; display: flex; flex-direction: column; align-items: center; border: 3px solid #f0c04030; }
+.tlabel { font-size: 5rem; color: #777; }
+.tval { font-size: 15rem; font-weight: 800; color: #f0c040; }
+.tgrade { font-size: 6rem; font-weight: 700; color: #fff; margin-top: 20px; }
+.rbtn { padding: 48px 156px; font-size: 6rem; font-weight: 800; background: #f0c040; color: #111; border: none; border-radius: 150px; margin-top: 50px; }
+
+/* 점수 등록 / 다시 하기 보조 버튼 */
+.rbtn.alt { background: #1e1e2c; color: #f0c040; border: 4px solid #f0c040; }
+.rbtn.alt:disabled { background: #1a1a22; color: #555; border-color: #444; cursor: not-allowed; }
+.rbtn:disabled { background: #555; color: #999; cursor: not-allowed; }
+
+/* 닉네임 등록 모달 */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal-overlay.on { display: flex; }
+.modal-card { width: min(1500px, 90%); background: #161622; border-radius: 60px; padding: 96px 84px; display: flex; flex-direction: column; align-items: center; gap: 48px; border: 4px solid #f0c04055; box-shadow: 0 60px 180px rgba(0,0,0,0.7); }
+.modal-title { font-size: 7rem; font-weight: 800; color: #fff; text-align: center; }
+.modal-sub { font-size: 4.2rem; color: #888; text-align: center; line-height: 1.4; }
+.nickinput { width: 100%; max-width: 1100px; font-size: 6rem; padding: 48px 60px; background: #0d0d14; color: #fff; border: 4px solid #333; border-radius: 36px; text-align: center; font-family: inherit; outline: none; }
+.nickinput:focus { border-color: #f0c040; }
+.modal-btnrow { display: flex; gap: 36px; width: 100%; justify-content: center; flex-wrap: wrap; }
+.modal-btn { padding: 42px 96px; font-size: 5.5rem; font-weight: 800; border: none; border-radius: 120px; cursor: pointer; white-space: nowrap; }
+.modal-btn.primary { background: #f0c040; color: #111; }
+.modal-btn.primary:disabled { background: #555; color: #999; cursor: not-allowed; }
+.modal-btn.ghost { background: transparent; color: #aaa; border: 4px solid #444; }
+.nickmsg { font-size: 4.2rem; color: #aaa; min-height: 1.2em; text-align: center; }
+.nickmsg.ok { color: #4CAF50; }
+.nickmsg.warn { color: #f0a040; }
+.nickmsg.err { color: #ff5555; }
+
+.hv#next-preview-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 150px; /* 이미지 공간 확보 */
+    height: 150px;
+    background: rgba(255, 255, 255, 0.1); /* 약간의 배경을 주면 더 깔끔합니다 */
+    border-radius: 20px;
+    margin-left: 20px;
+}
+
+#next-preview {
+    max-width: 120px;
+    max-height: 120px;
+}
+
+.bottom-guide {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 40px;
+    gap: 30px;
+}

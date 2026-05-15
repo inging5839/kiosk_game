@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>안성 카드 뒤집기</title>
+<link rel="stylesheet" href="../../assets/kiosk-keyboard.css">
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+html,body{width:100%;height:100%}
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#000;overflow:hidden;font-family:'Pretendard',-apple-system,sans-serif;touch-action:none;overscroll-behavior:none}
+#gr{width:2160px;height:3840px;background:#0d0d14;display:flex;flex-direction:column;align-items:center;justify-content:center;position:fixed;left:50%;top:50%;transform-origin:50% 50%;overflow:hidden}
+.scr{display:none;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%}
+.scr.on{display:flex}
+#ss{gap:60px;padding:120px 60px}
+.gtitle{font-size:17rem;font-weight:800;color:#fff;text-align:center;line-height:1.08}
+.gtitle span{color:#f0c040}
+.gdesc{font-size:5rem;color:#999;text-align:center;line-height:1.65;max-width:1200px}
+.sbtn,.rbtn,.modebtn{padding:48px 156px;font-size:5rem;font-weight:800;background:#f0c040;color:#111;border:0;border-radius:150px;cursor:pointer}
+.modebox{display:flex;gap:36px;margin-top:24px}
+.modebtn{font-size:4.5rem;padding:42px 110px;background:#1e1e2c;color:#fff;border:3px solid #333}
+.modebtn strong{color:#f0c040}
+.preview{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;width:980px;margin:12px 0}
+.mini{height:360px;border-radius:36px;background:#161622;border:5px solid #2a2a3a;overflow:hidden;box-shadow:0 24px 70px #0008}
+.mini img{width:100%;height:100%;object-fit:cover}
+#gs{padding:60px 50px;gap:0;justify-content:flex-start}
+.hud{width:100%;height:30vh;display:flex;justify-content:space-between;align-items:center;padding:0 20px 40px}
+.hi{display:flex;flex-direction:column;align-items:center;gap:8px}
+.hl{font-size:5rem;color:#555;text-transform:uppercase;letter-spacing:1.5px;font-weight:600}
+.hv{font-size:10rem;font-weight:700;color:#fff}
+.hv.tim{color:#f0c040}
+.hv.urg{color:#ff5555;animation:pu .4s ease infinite alternate}
+@keyframes pu{from{opacity:1}to{opacity:.4}}
+.boardwrap{width:100%;display:flex;align-items:center;justify-content:center}
+#board{display:grid;gap:22px;width:calc(100% - 70px);max-width:1960px}
+.card{position:relative;aspect-ratio:3/4;perspective:1200px;cursor:pointer}
+.cardin{position:absolute;inset:0;transition:transform .45s cubic-bezier(.2,.8,.2,1);transform-style:preserve-3d}
+.card.open .cardin,.card.done .cardin{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;border-radius:28px;backface-visibility:hidden;overflow:hidden}
+.back{background:#11111a url('./images/card_back.png') center/cover no-repeat;border:5px solid #39394d;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 45px #0007}
+.front{transform:rotateY(180deg);background:#191927;border:5px solid #f0c04055;display:flex;flex-direction:column}
+.front img{width:100%;height:78%;object-fit:cover}
+.label{height:22%;display:flex;align-items:center;justify-content:center;text-align:center;color:#fff;font-size:2.8rem;font-weight:800;padding:8px 12px;line-height:1.12}
+.done .front{border-color:#f0c040;box-shadow:0 0 32px #f0c04055}
+.inst{font-size:6rem;color:#777;margin-top:46px;text-align:center;font-weight:500}
+.toolrow{display:flex;gap:24px;width:100%;margin-top:28px}
+.homebtn{width:100%;padding:32px 30px;font-size:3.8rem;font-weight:800;background:#1e1e2c;color:#fff;border:3px solid #333;border-radius:80px;cursor:pointer}
+#rs{gap:48px;padding:84px 60px}
+.rtitle{font-size:10rem;font-weight:800;color:#fff}
+.total{width:100%;max-width:960px;background:#1a1a28;border-radius:42px;padding:60px;display:flex;flex-direction:column;align-items:center;gap:12px;border:3px solid #f0c04030}
+.tlabel{font-size:5rem;color:#777;font-weight:500}
+.tval{font-size:10rem;font-weight:800;color:#f0c040;line-height:1.1}
+.tgrade{font-size:5.5rem;font-weight:700;color:#fff;margin-top:10px;text-align:center}
+.slist{width:100%;max-width:960px;display:flex;flex-direction:column;gap:24px}
+.srow{display:flex;align-items:center;justify-content:space-between;background:#161622;border-radius:30px;padding:30px 42px}
+.slabel{font-size:5rem;color:#ccc;font-weight:600}
+.spts{font-size:6rem;font-weight:800;color:#f0c040}
+/* 점수 등록 / 다시 하기 보조 버튼 */
+.rbtn.alt{background:#1e1e2c;color:#f0c040;border:4px solid #f0c040}
+.rbtn.alt:disabled{background:#1a1a22;color:#555;border-color:#444;cursor:not-allowed}
+.rbtn:disabled{background:#555;color:#999;cursor:not-allowed}
+/* 닉네임 등록 모달 */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal-overlay.on{display:flex}
+.modal-card{width:min(1500px,90%);background:#161622;border-radius:60px;padding:96px 84px;display:flex;flex-direction:column;align-items:center;gap:48px;border:4px solid #f0c04055;box-shadow:0 60px 180px rgba(0,0,0,.7)}
+.modal-title{font-size:7rem;font-weight:800;color:#fff;text-align:center}
+.modal-sub{font-size:4.2rem;color:#888;text-align:center;line-height:1.4}
+.nickinput{width:100%;max-width:1100px;font-size:6rem;padding:48px 60px;background:#0d0d14;color:#fff;border:4px solid #333;border-radius:36px;text-align:center;font-family:inherit;outline:none}
+.nickinput:focus{border-color:#f0c040}
+.modal-btnrow{display:flex;gap:36px;width:100%;justify-content:center;flex-wrap:wrap}
+.modal-btn{padding:42px 96px;font-size:5.5rem;font-weight:800;border:none;border-radius:120px;cursor:pointer;white-space:nowrap}
+.modal-btn.primary{background:#f0c040;color:#111}
+.modal-btn.primary:disabled{background:#555;color:#999;cursor:not-allowed}
+.modal-btn.ghost{background:transparent;color:#aaa;border:4px solid #444}
+.nickmsg{font-size:4.2rem;color:#aaa;min-height:1.2em;text-align:center}
+.nickmsg.ok{color:#4CAF50}
+.nickmsg.warn{color:#f0a040}
+.nickmsg.err{color:#ff5555}
+</style>
+</head>
+<body>
+<div id="gr">
+  <div id="ss" class="scr on">
+    <div class="gtitle"><span>카드</span> 뒤집기</div>
+    <p class="gdesc">안성의 명소 카드를 기억하고<br>같은 그림을 맞춰보세요!</p>
+    <div class="preview">
+      <div class="mini"><img src="./images/geumgwang.png" alt=""></div>
+      <div class="mini"><img src="./images/namsadang.png" alt=""></div>
+      <div class="mini"><img src="./images/chiljangsa.png" alt=""></div>
+    </div>
+    
+    <button class="sbtn" onclick="startGame('easy')">게임 시작</button>
+    <button class="sbtn" id="backBtn" style="margin-top: 40px; background: #444; color: #fff;" onclick="location.href='../../index.html'">돌아가기</button>
+  </div>
+  <div id="gs" class="scr">
+    <div class="hud">
+      <div class="hi"><span class="hl">짝 찾기</span><span class="hv" id="pairDis">0 / 8</span></div>
+      <div class="hi"><span class="hl">점수</span><span class="hv" id="scoreDis">0</span></div>
+      <div class="hi"><span class="hl">시간</span><span class="hv tim" id="timeDis">0</span></div>
+    </div>
+    <div class="boardwrap"><div id="board"></div></div>
+    <div class="toolrow">
+      <button class="homebtn" onclick="goHome()">처음으로</button>
+    </div>
+    <p class="inst" id="inst">카드를 눌러 같은 그림을 찾아보세요</p>
+  </div>
+  <div id="rs" class="scr">
+    <div class="rtitle">게임 결과</div>
+    <div class="slist">
+      <div class="srow"><span class="slabel">걸린 시간</span><span class="spts" id="resTime">0초</span></div>
+      <div class="srow"><span class="slabel">시도 횟수</span><span class="spts" id="resTry">0</span></div>
+    </div>
+    <div class="total"><span class="tlabel">총점</span><span class="tval" id="finalScore">0</span><span class="tgrade" id="grade"></span></div>
+    <button class="rbtn" id="registerBtn" onclick="openNickModal()">점수 등록</button>
+    <button class="rbtn alt" onclick="restart()">다시 하기</button>
+  </div>
+
+  <div class="modal-overlay" id="nickModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-title" id="modalTitle">닉네임 등록</div>
+      <div class="modal-sub">랭킹에 표시될 닉네임을 입력하세요<br><span id="modalScore" style="color:#f0c040;font-weight:700;"></span></div>
+      <input class="nickinput" id="nickInput" type="text" maxlength="20" placeholder="닉네임 (최대 20자)" autocomplete="off" readonly inputmode="none">
+      <div class="nickmsg" id="nickMsg"></div>
+      <div class="kkb" id="kkb"></div>
+      <div class="modal-btnrow">
+        <button class="modal-btn ghost" id="cancelBtn" onclick="closeNickModal()">취소</button>
+        <button class="modal-btn primary" id="saveBtn" onclick="submitScore()">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="../../assets/hangul.min.js"></script>
+<script src="../../assets/kiosk-keyboard.js"></script>
+<script>
+function resizeKiosk(){var vw=document.documentElement.clientWidth||innerWidth;var vh=document.documentElement.clientHeight||innerHeight;var s=Math.min(vw/2160,vh/3840);document.getElementById('gr').style.transform='translate(-50%, -50%) scale('+s+')'}
+addEventListener('resize',resizeKiosk);resizeKiosk();
+const DATA=[
+['gaeksa','안성 객사'],['guksabong','국사봉'],['geumgwang','금광호수'],['namsadang','남사당놀이'],['land','맞춤랜드'],['mural','명륜동벽화'],
+['mirinae','미리내성지'],['baudeogi','바우덕이'],['bibong','비봉산 전망대'],['seoun','서운산'],['seoil','서일농원'],['seoknamsa','석남사'],
+['market','안성시장'],['juksanholy','죽산순교성지'],['jukju','죽주산성'],['chilgok','칠곡호수'],['chiljangsa','칠장사'],['grape','안성 포도']
+].map(([id,label])=>({id,label,img:'./images/'+id+'.png'}));
+const CFG={easy:{pairs:8,cols:4,limit:60,maxScore:10000}};
+let st={mode:'easy',deck:[],open:[],done:new Set(),tries:0,start:0,timer:null,lock:false,elapsed:0,ended:false,timedOut:false};
+function show(id){document.querySelectorAll('.scr').forEach(s=>s.classList.remove('on'));document.getElementById(id).classList.add('on')}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function startGame(mode='easy'){mode=CFG[mode]?mode:'easy';st.mode=mode;let c=CFG[mode];let pool=shuffle(DATA).slice(0,c.pairs);st.deck=shuffle(pool.concat(pool));st.open=[];st.done=new Set();st.tries=0;st.start=Date.now();st.elapsed=0;st.lock=false;st.ended=false;st.timedOut=false;build(c.cols);updateHud();clearInterval(st.timer);st.timer=setInterval(tick,300);show('gs')}
+function build(cols){const b=document.getElementById('board');b.innerHTML='';b.style.gridTemplateColumns='repeat('+cols+',1fr)';st.deck.forEach((d,i)=>{let el=document.createElement('div');el.className='card';el.dataset.i=i;el.innerHTML='<div class="cardin"><div class="face back"></div><div class="face front"><img src="'+d.img+'" alt=""><div class="label">'+d.label+'</div></div></div>';el.onclick=()=>pick(i);b.appendChild(el)})}
+function tick(){let c=CFG[st.mode];st.elapsed=Math.floor((Date.now()-st.start)/1000);if(st.elapsed>=c.limit){st.elapsed=c.limit;endGame(false,true);return}updateHud()}
+function score(){let c=CFG[st.mode];let foundPairs=st.done.size/2;let foundRatio=foundPairs/c.pairs;let remainRatio=Math.max(0,c.limit-st.elapsed)/c.limit;if(foundPairs===c.pairs&&!st.timedOut)return Math.round(c.maxScore*(.4+.6*remainRatio));return Math.round(c.maxScore*.4*foundRatio)}
+function updateHud(){let c=CFG[st.mode];let remain=Math.max(0,c.limit-st.elapsed);document.getElementById('pairDis').textContent=(st.done.size/2)+' / '+c.pairs;document.getElementById('scoreDis').textContent=score().toLocaleString();let t=document.getElementById('timeDis');t.textContent=remain;t.classList.toggle('urg',remain<=10)}
+function pick(i){if(st.ended||st.lock||st.done.has(i)||st.open.includes(i))return;let cards=document.querySelectorAll('.card');cards[i].classList.add('open');st.open.push(i);if(st.open.length===2)check()}
+function check(){st.lock=true;st.tries++;let [a,b]=st.open;if(st.deck[a].id===st.deck[b].id){setTimeout(()=>{document.querySelectorAll('.card')[a].classList.add('done');document.querySelectorAll('.card')[b].classList.add('done');st.done.add(a);st.done.add(b);st.open=[];st.lock=false;updateHud();if(st.done.size===st.deck.length)endGame()},350)}else{setTimeout(()=>{document.querySelectorAll('.card')[a].classList.remove('open');document.querySelectorAll('.card')[b].classList.remove('open');st.open=[];st.lock=false;updateHud()},700)}}
+function endGame(won=true,timedOut=false){if(st.ended)return;st.ended=true;st.timedOut=timedOut;clearInterval(st.timer);let final=score();document.getElementById('resTime').textContent=timedOut?'시간 초과':st.elapsed+'초';document.getElementById('resTry').textContent=st.tries;document.getElementById('finalScore').textContent=final.toLocaleString();document.getElementById('grade').textContent=timedOut?'시간이 다 됐어요':won?'완벽한 기억력!':'다시 도전해보세요';var regBtn=document.getElementById('registerBtn');regBtn.disabled=false;regBtn.textContent='점수 등록';regBtn.dataset.score=String(final);regBtn.dataset.saved='0';show('rs')}
+function restart(){startGame(st.mode)}
+function goHome(){clearInterval(st.timer);st.lock=false;show('ss')}
+
+// 랭킹 서버 주소: 파일 직접 실행(file://)이면 localhost:3000, 서버에서 서빙되면 동일 오리진.
+var RANKING_API=(location.protocol==='http:'||location.protocol==='https:')?'/api/ranking':'http://localhost:3000/api/ranking';
+var GAME_INDEX=4; // 카드 뒤집기
+
+function setNickMsg(text,kind){var el=document.getElementById('nickMsg');el.textContent=text||'';el.className='nickmsg'+(kind?' '+kind:'')}
+function openNickModal(){var regBtn=document.getElementById('registerBtn');if(regBtn.dataset.saved==='1')return;var modal=document.getElementById('nickModal');var input=document.getElementById('nickInput');var saveBtn=document.getElementById('saveBtn');var cancelBtn=document.getElementById('cancelBtn');var scoreLabel=document.getElementById('modalScore');var sv=parseInt(regBtn.dataset.score||'0',10)||0;scoreLabel.textContent='내 점수: '+sv.toLocaleString()+'점';input.value='';input.disabled=false;saveBtn.disabled=false;saveBtn.textContent='등록';cancelBtn.disabled=false;setNickMsg('');modal.classList.add('on');modal.setAttribute('aria-hidden','false');Kkb.init(input);}
+function closeNickModal(){var modal=document.getElementById('nickModal');modal.classList.remove('on');modal.setAttribute('aria-hidden','true')}
+function submitScore(){var input=document.getElementById('nickInput');var saveBtn=document.getElementById('saveBtn');var cancelBtn=document.getElementById('cancelBtn');var regBtn=document.getElementById('registerBtn');var nickname=(input.value||'').trim();if(!nickname){setNickMsg('닉네임을 입력해주세요.','err');return}if(nickname.length>20){setNickMsg('닉네임은 20자 이하여야 합니다.','err');return}var sv=parseInt(regBtn.dataset.score||'0',10)||0;var imageIndex=Math.floor(Math.random()*15);saveBtn.disabled=true;cancelBtn.disabled=true;input.disabled=true;setNickMsg('등록 중...','');fetch(RANKING_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({nickname:nickname,score:sv,game_index:GAME_INDEX,image_index:imageIndex})}).then(function(r){return r.json().then(function(j){return{ok:r.ok,body:j}})}).then(function(res){if(!res.ok){var msg=(res.body&&res.body.error)?res.body.error:'등록에 실패했습니다.';setNickMsg(msg,'err');saveBtn.disabled=false;cancelBtn.disabled=false;input.disabled=false;return}var saved=res.body.nickname||nickname;if(res.body.tagged){setNickMsg('중복 닉네임이라 "'+saved+'"(으)로 등록되었습니다.','warn')}else{setNickMsg('"'+saved+'" 등록 완료!','ok')}regBtn.dataset.saved='1';regBtn.disabled=true;regBtn.textContent='등록 완료';setTimeout(closeNickModal,1400)}).catch(function(err){console.error('점수 등록 오류:',err);setNickMsg('서버에 연결할 수 없습니다.','err');saveBtn.disabled=false;cancelBtn.disabled=false;input.disabled=false})}
+
+// 모달 바깥 클릭 시 닫기, 엔터/ESC 단축키
+document.getElementById('nickModal').addEventListener('click',function(e){if(e.target===this)closeNickModal()});
+document.getElementById('nickInput').addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();submitScore()}else if(e.key==='Escape'){e.preventDefault();closeNickModal()}});
+</script>
+</body>
+</html>

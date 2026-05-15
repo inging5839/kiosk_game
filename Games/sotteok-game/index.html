@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>소떡소떡 챌린지</title>
+<link rel="stylesheet" href="../../assets/kiosk-keyboard.css">
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+/* 절반자르기 스타일 시스템 적용 */
+html, body { width: 100%; height: 100%; }
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+body { 
+  margin: 0; 
+  background: #000; 
+  overflow: hidden; 
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  touch-action: none; 
+  overscroll-behavior: none;
+}
+
+#gr { 
+  /* 9:16 기준 해상도(2160x3840) - 절반자르기와 동일 */
+  width: 2160px;
+  height: 3840px;
+  background: #0d0d14; 
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 50%;
+  overflow: hidden;
+}
+
+.scr { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.scr.on { display: flex; }
+
+/* 시작 화면 UI */
+#ss { gap: 60px; padding: 120px 60px; }
+.gtitle{font-size:15rem;font-weight:800;color:#fff;text-align:center;line-height:1.1}
+.gtitle span{color:#f0c040}
+.gdesc { font-size: 5rem; color: #999; text-align: center; line-height: 1.8; max-width: 1200px; }
+.rule-box { background: #1e1e2c; padding: 60px; border-radius: 40px; border: 3px solid #333; margin-top: 40px; }
+.rule-list { font-size: 4.5rem; color: #ccc; list-style: none; line-height: 2.2; }
+.sbtn { margin-top: 48px; padding: 48px 156px; font-size: 6rem; font-weight: 800; background: #F0C040; color: #111111; border: none; border-radius: 150px; cursor: pointer; transition: transform 0.2s; }
+
+/* 게임 화면 UI */
+#gs { padding: 60px 80px; gap: 0; justify-content: flex-start; }
+.hud { width: 100%; height: 400px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 100px; }
+.hi { display: flex; flex-direction: column; align-items: center; gap: 20px; }
+.hl { font-size: 5rem; color: #555; text-transform: uppercase; font-weight: 600; }
+.hv { font-size: 10rem; font-weight: 700; color: #fff; }
+.hv.tim { color: #ff5555; }
+
+/* 소떡소떡 커스텀 영역 */
+.game-main { width: 100%; flex: 1; display: flex; flex-direction: column; align-items: center; gap: 120px; }
+
+.section-card { width: 100%; background: #161622; border-radius: 60px; padding: 80px; border: 4px solid #333; }
+.section-title { font-size: 5rem; color: #888; margin-bottom: 40px; text-align: center; }
+
+/* 꼬치 그래픽 */
+.skewer-row { position: relative; height: 300px; display: flex; align-items: center; justify-content: center; gap: 20px; }
+.skewer-stick { position: absolute; height: 30px; width: 95%; background: #c8a97e; border-radius: 15px; z-index: 0; }
+.item-slot { width: 220px; height: 220px; background: #2a2a3a; border-radius: 50%; display: flex; align-items: center; justify-content: center; z-index: 1; border: 6px solid #444; }
+.item-slot img { width: 180px; height: 180px; object-fit: contain; }
+.item-slot.empty { border-style: dashed; background: transparent; }
+
+/* 하단 버튼 */
+.btn-area { width: 100%; display: flex; gap: 60px; margin-top: 100px; }
+.ingre-btn { flex: 1; height: 500px; background: #1e1e2c; border: 6px solid #444; border-radius: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 30px; cursor: pointer; }
+.ingre-btn:active { transform: scale(0.95); background: #2a2a3a; }
+.ingre-btn img { width: 250px; height: 250px; }
+.ingre-btn span { font-size: 6rem; font-weight: 800; color: #fff; }
+
+/* 결과 화면 */
+#rs { gap: 60px; }
+.total-card { background: #1a1a28; border: 4px solid #ff555544; padding: 100px; border-radius: 80px; align-items: center; display: flex; flex-direction: column; gap: 40px; }
+.tval { font-size: 25rem; font-weight: 900; color: #ff5555; }
+.feedback-msg { font-size: 100px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); pointer-events: none; opacity: 0; transition: 0.3s; z-index: 100; }
+
+.ico-fallback { font-size: 150px; }
+
+/* 점수 등록 버튼 */
+.regbtn { margin-top: 0; padding: 48px 120px; font-size: 5rem; font-weight: 800; background: #f0c040; color: #111; border: none; border-radius: 150px; cursor: pointer; }
+.regbtn:disabled { background: #555; color: #999; cursor: not-allowed; }
+
+/* 닉네임 등록 모달 */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal-overlay.on { display: flex; }
+.modal-card { width: min(1500px, 90%); background: #161622; border-radius: 60px; padding: 96px 84px; display: flex; flex-direction: column; align-items: center; gap: 48px; border: 4px solid #f0c04055; box-shadow: 0 60px 180px rgba(0,0,0,0.7); }
+.modal-title { font-size: 7rem; font-weight: 800; color: #fff; text-align: center; }
+.modal-sub { font-size: 4.2rem; color: #888; text-align: center; line-height: 1.4; }
+.nickinput { width: 100%; max-width: 1100px; font-size: 6rem; padding: 48px 60px; background: #0d0d14; color: #fff; border: 4px solid #333; border-radius: 36px; text-align: center; font-family: inherit; outline: none; }
+.nickinput:focus { border-color: #f0c040; }
+.modal-btnrow { display: flex; gap: 36px; width: 100%; justify-content: center; flex-wrap: wrap; }
+.modal-btn { padding: 42px 96px; font-size: 5.5rem; font-weight: 800; border: none; border-radius: 120px; cursor: pointer; white-space: nowrap; }
+.modal-btn.primary { background: #f0c040; color: #111; }
+.modal-btn.primary:disabled { background: #555; color: #999; cursor: not-allowed; }
+.modal-btn.ghost { background: transparent; color: #aaa; border: 4px solid #444; }
+.nickmsg { font-size: 4.2rem; color: #aaa; min-height: 1.2em; text-align: center; }
+.nickmsg.ok { color: #4CAF50; }
+.nickmsg.warn { color: #f0a040; }
+.nickmsg.err { color: #ff5555; }
+</style>
+</head>
+<body>
+
+<div id="gr">
+  <div id="ss" class="scr on">
+    <div class="gtitle"><span>소떡소떡</span> 챌린지</div>
+    <p class="gdesc">순서를 기억하여 <br>맛있는 꼬치를 완성하세요!</p>
+    <div class="rule-box">
+      <ul class="rule-list">
+        <li>🍢 목표 꼬치의 순서를 잘 보세요</li>
+        <li>👈 왼쪽부터 순서대로 버튼을 누르세요</li>
+        <li>❌ 틀리면 기회가 줄어듭니다 (총 3번)</li>
+        <li>⏱ 30초 동안 최대한 많이 만드세요!</li>
+      </ul>
+    </div>
+    <button class="sbtn" id="startBtn">게임 시작</button>
+    <button class="sbtn" id="backBtn" style="margin-top: 40px; background: #444; color: #fff;" onclick="location.href='../../index.html'">돌아가기</button>
+
+  </div>
+
+  <div id="gs" class="scr">
+    <div class="hud">
+      <div class="hi"><span class="hl">SCORE</span><span class="hv" id="score-dis">0</span></div>
+      <div class="hi"><span class="hl">꼬치 완성</span><span class="hv" id="round-dis">0</span></div>
+      <div class="hi"><span class="hl">TIME</span><span class="hv tim" id="time-dis">30</span></div>
+    </div>
+
+    <div class="game-main">
+      <div class="section-card">
+        <div class="section-title">TARGET (목표 순서)</div>
+        <div class="skewer-row" id="target-skewer">
+          <div class="skewer-stick"></div>
+          </div>
+      </div>
+
+      <div class="section-card" style="border-style: dashed; background: transparent;">
+        <div class="section-title">MY SKEWER (내 꼬치)</div>
+        <div class="skewer-row" id="player-skewer">
+          <div class="skewer-stick" style="background: #e0d0b0;"></div>
+          </div>
+      </div>
+
+      <div class="btn-area">
+        <div class="ingre-btn" id="btn-tteok">
+          <img src="tteok.png" alt="떡" class="ingre-img">
+          <span>떡</span>
+        </div>
+        <div class="ingre-btn" id="btn-sausage">
+          <img src="sausage.png" alt="소시지" class="ingre-img">
+          <span>소시지</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="rs" class="scr">
+    <div class="hl" style="font-size: 8rem;">GAME OVER</div>
+    <div class="total-card">
+      <span class="hl">최종 점수</span>
+      <span class="tval" id="final-score">0</span>
+      <span class="gdesc" id="final-detail">완성: 0꼬치</span>
+    </div>
+    <button class="regbtn" id="registerBtn" onclick="openNickModal()">점수 등록</button>
+    <button class="sbtn" id="againBtn">다시 하기</button>
+  </div>
+
+  <div id="msg-overlay" class="feedback-msg">✅</div>
+
+  <div class="modal-overlay" id="nickModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-title" id="modalTitle">닉네임 등록</div>
+      <div class="modal-sub">랭킹에 표시될 닉네임을 입력하세요<br><span id="modalScore" style="color:#f0c040;font-weight:700;"></span></div>
+      <input class="nickinput" id="nickInput" type="text" maxlength="20" placeholder="닉네임 (최대 20자)" autocomplete="off" readonly inputmode="none">
+      <div class="nickmsg" id="nickMsg"></div>
+      <div class="kkb" id="kkb"></div>
+      <div class="modal-btnrow">
+        <button class="modal-btn ghost" id="cancelBtn" onclick="closeNickModal()">취소</button>
+        <button class="modal-btn primary" id="saveBtn" onclick="submitScore()">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/hangul.min.js"></script>
+<script src="../../assets/kiosk-keyboard.js"></script>
+<script>
+// --- 비율 조절 로직 (절반자르기 동일) ---
+function resizeKiosk() {
+  var vw = document.documentElement.clientWidth || window.innerWidth;
+  var vh = document.documentElement.clientHeight || window.innerHeight;
+  var scale = Math.min(vw / 2160, vh / 3840);
+  var gr = document.getElementById('gr');
+  gr.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+}
+window.addEventListener('resize', resizeKiosk);
+resizeKiosk();
+
+// --- 게임 로직 ---
+const SKEWER_LEN = 6;
+const ITEM_IMG = { tteok: 'tteok.png', sausage: 'sausage.png' };
+const ITEM_EMOJI = { tteok: '🍡', sausage: '🌭' };
+
+let score = 0, timeLeft = 30, hearts = 3;
+let targetSeq = [], playerIdx = 0, rounds = 0;
+let gameActive = false, timerInterval = null;
+
+// 이미지 오류 대응
+document.querySelectorAll('.ingre-img').forEach(img => {
+    img.onerror = function() {
+        const span = document.createElement('span');
+        span.className = 'ico-fallback';
+        span.textContent = this.alt === '떡' ? '🍡' : '🌭';
+        this.replaceWith(span);
+    };
+});
+
+function showScr(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+function showFeedback(txt) {
+  const el = document.getElementById('msg-overlay');
+  el.textContent = txt;
+  el.style.opacity = '1';
+  setTimeout(() => el.style.opacity = '0', 500);
+}
+
+function initRound() {
+  targetSeq = Array.from({length: SKEWER_LEN}, () => Math.random() > 0.5 ? 'tteok' : 'sausage');
+  playerIdx = 0;
+  renderSkewers();
+}
+
+function renderSkewers() {
+  const tEl = document.getElementById('target-skewer');
+  const pEl = document.getElementById('player-skewer');
+  
+  // 리셋 (막대는 유지)
+  tEl.innerHTML = '<div class="skewer-stick"></div>';
+  pEl.innerHTML = '<div class="skewer-stick" style="background: #e0d0b0;"></div>';
+
+  targetSeq.forEach((type, i) => {
+    // 목표 표시
+    const tSlot = document.createElement('div');
+    tSlot.className = 'item-slot';
+    tSlot.innerHTML = `<img src="${ITEM_IMG[type]}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${ITEM_EMOJI[type]}',className:'ico-fallback'}))">`;
+    tEl.appendChild(tSlot);
+
+    // 플레이어 표시
+    const pSlot = document.createElement('div');
+    if(i < playerIdx) {
+      pSlot.className = 'item-slot';
+      pSlot.innerHTML = `<img src="${ITEM_IMG[targetSeq[i]]}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${ITEM_EMOJI[targetSeq[i]]}',className:'ico-fallback'}))">`;
+    } else {
+      pSlot.className = 'item-slot empty';
+    }
+    pEl.appendChild(pSlot);
+  });
+}
+
+function handleInput(type) {
+  if(!gameActive) return;
+
+  if(targetSeq[playerIdx] === type) {
+    playerIdx++;
+    score += 10;
+    showFeedback('✅');
+    if(playerIdx === SKEWER_LEN) {
+      score += 50;
+      rounds++;
+      initRound();
+    } else {
+      renderSkewers();
+    }
+  } else {
+    hearts--;
+    showFeedback('❌');
+    if(hearts <= 0) endGame();
+  }
+  document.getElementById('score-dis').textContent = score;
+  document.getElementById('round-dis').textContent = rounds;
+}
+
+function startGame() {
+  score = 0; timeLeft = 30; hearts = 3; rounds = 0;
+  gameActive = true;
+  document.getElementById('score-dis').textContent = '0';
+  document.getElementById('round-dis').textContent = '0';
+  showScr('gs');
+  initRound();
+
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    timeLeft--;
+    document.getElementById('time-dis').textContent = timeLeft;
+    if(timeLeft <= 10) document.getElementById('time-dis').classList.add('urg');
+    if(timeLeft <= 0) endGame();
+  }, 1000);
+}
+
+function endGame() {
+  gameActive = false;
+  clearInterval(timerInterval);
+  document.getElementById('final-score').textContent = score;
+  document.getElementById('final-detail').textContent = `완성한 꼬치: ${rounds}개`;
+  var regBtn = document.getElementById('registerBtn');
+  regBtn.disabled = false;
+  regBtn.textContent = '점수 등록';
+  regBtn.dataset.score = String(score);
+  regBtn.dataset.saved = '0';
+  showScr('rs');
+}
+
+// 랭킹 서버 주소
+var RANKING_API = (location.protocol === 'http:' || location.protocol === 'https:') ? '/api/ranking' : 'http://localhost:3000/api/ranking';
+var GAME_INDEX = 1; // 소떡소떡
+
+function setNickMsg(text, kind) { var el = document.getElementById('nickMsg'); el.textContent = text || ''; el.className = 'nickmsg' + (kind ? ' ' + kind : ''); }
+function openNickModal() {
+  var regBtn = document.getElementById('registerBtn');
+  if (regBtn.dataset.saved === '1') return;
+  var modal = document.getElementById('nickModal');
+  var input = document.getElementById('nickInput');
+  var saveBtn = document.getElementById('saveBtn');
+  var cancelBtn = document.getElementById('cancelBtn');
+  var scoreLabel = document.getElementById('modalScore');
+  var sv = parseInt(regBtn.dataset.score || '0', 10) || 0;
+  scoreLabel.textContent = '내 점수: ' + sv.toLocaleString() + '점';
+  input.value = '';
+  input.disabled = false;
+  saveBtn.disabled = false; saveBtn.textContent = '등록';
+  cancelBtn.disabled = false;
+  setNickMsg('');
+  modal.classList.add('on'); modal.setAttribute('aria-hidden', 'false');
+  Kkb.init(input);
+}
+function closeNickModal() { var modal = document.getElementById('nickModal'); modal.classList.remove('on'); modal.setAttribute('aria-hidden', 'true'); }
+function submitScore() {
+  var input = document.getElementById('nickInput');
+  var saveBtn = document.getElementById('saveBtn');
+  var cancelBtn = document.getElementById('cancelBtn');
+  var regBtn = document.getElementById('registerBtn');
+  var nickname = (input.value || '').trim();
+  if (!nickname) { setNickMsg('닉네임을 입력해주세요.', 'err'); return; }
+  if (nickname.length > 20) { setNickMsg('닉네임은 20자 이하여야 합니다.', 'err'); return; }
+  var sv = parseInt(regBtn.dataset.score || '0', 10) || 0;
+  var imageIndex = Math.floor(Math.random() * 15);
+  saveBtn.disabled = true; cancelBtn.disabled = true; input.disabled = true;
+  setNickMsg('등록 중...', '');
+  fetch(RANKING_API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nickname: nickname, score: sv, game_index: GAME_INDEX, image_index: imageIndex })
+  })
+  .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
+  .then(function(res) {
+    if (!res.ok) {
+      var msg = (res.body && res.body.error) ? res.body.error : '등록에 실패했습니다.';
+      setNickMsg(msg, 'err');
+      saveBtn.disabled = false; cancelBtn.disabled = false; input.disabled = false;
+      return;
+    }
+    var saved = res.body.nickname || nickname;
+    if (res.body.tagged) setNickMsg('중복 닉네임이라 "' + saved + '"(으)로 등록되었습니다.', 'warn');
+    else setNickMsg('"' + saved + '" 등록 완료!', 'ok');
+    regBtn.dataset.saved = '1';
+    regBtn.disabled = true;
+    regBtn.textContent = '등록 완료';
+    setTimeout(closeNickModal, 1400);
+  })
+  .catch(function(err) {
+    console.error('점수 등록 오류:', err);
+    setNickMsg('서버에 연결할 수 없습니다.', 'err');
+    saveBtn.disabled = false; cancelBtn.disabled = false; input.disabled = false;
+  });
+}
+document.getElementById('nickModal').addEventListener('click', function(e) { if (e.target === this) closeNickModal(); });
+document.getElementById('nickInput').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); submitScore(); }
+  else if (e.key === 'Escape') { e.preventDefault(); closeNickModal(); }
+});
+
+// 이벤트 바인딩
+document.getElementById('startBtn').onclick = startGame;
+document.getElementById('againBtn').onclick = () => showScr('ss');
+document.getElementById('btn-tteok').onclick = () => handleInput('tteok');
+document.getElementById('btn-sausage').onclick = () => handleInput('sausage');
+
+// 터치 대응 (절반자르기 방식)
+function bindTouch(id, fn) {
+  const el = document.getElementById(id);
+  el.addEventListener('touchstart', (e) => { e.preventDefault(); fn(); }, {passive: false});
+}
+bindTouch('startBtn', startGame);
+bindTouch('againBtn', () => showScr('ss'));
+bindTouch('btn-tteok', () => handleInput('tteok'));
+bindTouch('btn-sausage', () => handleInput('sausage'));
+
+</script>
+</body>
+</html>

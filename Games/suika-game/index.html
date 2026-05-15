@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>안성 배 만들기 - 키오스크 에디션</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="../../assets/kiosk-keyboard.css">
+</head>
+<body>
+
+<div id="gr">
+    <div id="ss" class="scr on">
+        <div class="gtitle"><span>안성 배</span> 만들기</div>
+        <p class="gdesc">아이템을 합쳐서 가장 큰 <br><strong style="color:#f0c040">배</strong>를 만들어보세요!</p>
+        <div class="tags">
+            <div class="tag-item">
+                <img src="assets/coin.png" alt="엽전">
+                <span>엽전</span>
+            </div>
+            <div class="arrow">▶</div> 
+            <div class="tag-item">
+                <img src="assets/rice.png" alt="쌀">
+                <span>쌀</span>
+            </div>
+            <div class="arrow">▶</div> 
+            <div class="tag-item">
+                <img src="assets/grape.png" alt="포도">
+                <span>포도</span>
+            </div>
+            <div class="arrow">▶</div> 
+            <div class="tag-item">
+                <img src="assets/ginseng.png" alt="인삼">
+                <span>인삼</span>
+            </div>
+            <div class="arrow">▶</div> 
+            <div class="tag-item">
+                <img src="assets/persimmon.png" alt="감">
+                <span>감</span>
+            </div>
+            <div class="arrow">▶</div> 
+            <div class="tag-item">
+                <img src="assets/apple.png" alt="사과">
+                <span>사과</span>
+            </div>
+            <div class="arrow">▶</div>
+            <div class="tag-item">
+                <img src="assets/pear.png" alt="배">
+                <span>배</span>
+            </div>
+        </div>
+        <button class="sbtn" id="startBtn">게임시작</button>
+        <button class="sbtn" id="backBtn" style="margin-top: 40px; background: #444; color: #fff;" onclick="location.href='../../index.html'">돌아가기</button>
+    </div>
+
+    <div id="gs" class="scr">
+        <div class="hud">
+            <div class="hud-item left">
+                <span class="hl">SCORE</span>
+                <span class="hv" id="score">0</span>
+            </div>
+            
+            <div class="hud-item center">
+                <span class="hl">NEXT</span>
+                <div id="next-preview-container">
+                    <img id="next-preview" src="" style="width: 120px; height: 120px; object-fit: contain;">
+                </div>
+            </div>
+            
+            <div class="hud-item right">
+                <span class="hl">TIME</span>
+                <span class="hv" id="timer" style="color: #ff4d4d;">120</span>
+            </div>
+        </div>
+        <div class="game-container">
+            <div id="game-area"></div>
+        </div>
+            <p class="inst" id="inst">터치해서 과일을 떨어뜨리세요</p>
+            <div class="tags">
+            <div class="tag-item">
+                <img src="assets/coin.png" alt="엽전">
+                <span>엽전</span>
+            </div>
+            <div class="arrow" style="color: #555">▶</div> 
+            <div class="tag-item">
+                <img src="assets/rice.png" alt="쌀">
+                <span>쌀</span>
+            </div>
+            <div class="arrow" style="color: #555">▶</div> 
+            <div class="tag-item">
+                <img src="assets/grape.png" alt="포도">
+                <span>포도</span>
+            </div>
+            <div class="arrow" style="color: #555">▶</div> 
+            <div class="tag-item">
+                <img src="assets/ginseng.png" alt="인삼">
+                <span>인삼</span>
+            </div>
+            <div class="arrow" style="color: #555">▶</div> 
+            <div class="tag-item">
+                <img src="assets/persimmon.png" alt="감">
+                <span>감</span>
+            </div>
+            <div class="arrow" style="color: #555">▶</div> 
+            <div class="tag-item">
+                <img src="assets/apple.png" alt="사과">
+                <span>사과</span>
+            </div>
+            <div class="arrow" style="color: #555">▶</div>
+            <div class="tag-item">
+                <img src="assets/pear.png" alt="배">
+                <span>배</span>
+            </div>
+        </div>  
+    </div>
+
+    <div id="rs" class="scr">
+        <div class="rtitle">게임 결과</div>
+        <div class="total">
+            <span class="tlabel">최종 점수</span>
+            <span class="tval" id="finalScore">0</span>
+            <span class="tgrade" id="tgrade">훌륭한 실력입니다!</span>
+        </div>
+        <button class="rbtn" id="registerBtn" onclick="openNickModal()">점수 등록</button>
+        <button class="rbtn alt" id="againBtn">다시 하기</button>
+    </div>
+
+    <div class="modal-overlay" id="nickModal" aria-hidden="true">
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+            <div class="modal-title" id="modalTitle">닉네임 등록</div>
+            <div class="modal-sub">랭킹에 표시될 닉네임을 입력하세요<br><span id="modalScore" style="color:#f0c040;font-weight:700;"></span></div>
+            <input class="nickinput" id="nickInput" type="text" maxlength="20" placeholder="닉네임 (최대 20자)" autocomplete="off" readonly inputmode="none">
+            <div class="nickmsg" id="nickMsg"></div>
+            <div class="kkb" id="kkb"></div>
+            <div class="modal-btnrow">
+                <button class="modal-btn ghost" id="cancelBtn" onclick="closeNickModal()">취소</button>
+                <button class="modal-btn primary" id="saveBtn" onclick="submitScore()">등록</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+<script src="../../assets/hangul.min.js"></script>
+<script src="../../assets/kiosk-keyboard.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

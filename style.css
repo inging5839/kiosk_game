@@ -1,0 +1,104 @@
+/* 1. 기본 설정 및 키오스크 캔버스 고정 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Pretendard', 'Malgun Gothic', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+body {
+    background-color: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 1080x1920 FHD 영역 - 절반자르기 배경색 계열 적용 */
+.kiosk-wrapper {
+    width: 1080px;
+    height: 1920px;
+    background: #0d0d14; /* 게임 배경색과 통일 */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 1px solid #333;
+}
+
+/* 2. 헤더 디자인 - 절반자르기 텍스트 스타일 적용 */
+.kiosk-header {
+    width: 100%;
+    height: 450px; /* 상단 여백 확보 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding-top: 60px;
+}
+
+.kiosk-header h1 {
+    font-size: 100px;
+    font-weight: 800;
+    color: #ffffff;
+    margin-bottom: 20px;
+}
+
+.kiosk-header h1 span {
+    color: #f0c040; /* 포인트 골드 컬러 */
+}
+
+.kiosk-header p {
+    font-size: 36px;
+    color: #999;
+    letter-spacing: 2px;
+}
+
+/* 3. 게임 그리드 */
+.game-grid {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 50px;
+    padding: 40px 60px 120px 60px;
+}
+
+/* 4. 개별 게임 버튼 (사각형 UI) - 결과창의 .srow 스타일 계승 */
+.game-item {
+    background-color: #161622;
+    border: 3px solid #333;
+    border-radius: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.game-item span {
+    font-size: 48px;
+    font-weight: 700;
+    color: #ccc;
+    word-break: keep-all;
+    line-height: 1.3;
+}
+
+/* 5. 인터랙션 (터치 피드백) - 게임 내 버튼 스타일 적용 */
+.game-item:active {
+    transform: scale(0.95);
+    background-color: #1e1e2c;
+    border-color: #f0c040;
+}
+
+.game-item:active span {
+    color: #f0c040;
+}
+
+/* 특수 강조 버튼 (예: 메인 게임) */
+.game-item.highlight {
+    border-color: #f0c04030;
+}

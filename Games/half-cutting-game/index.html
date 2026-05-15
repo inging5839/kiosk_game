@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>반반 챌린지</title>
+<link rel="stylesheet" href="../../assets/kiosk-keyboard.css">
+<style>
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+/* [수정됨] body에 touch-action: none 및 overscroll-behavior 추가하여 모든 브라우저 제스처 차단 */
+html, body { width: 100%; height: 100%; }
+* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+
+body { 
+  margin: 0; 
+  background: #000; 
+  overflow: hidden;
+  font-family: 'Pretendard', -apple-system, sans-serif;
+  touch-action: none; 
+  overscroll-behavior: none;
+}
+
+#gr { 
+  /* 9:16 기준 해상도(4K 세로) - 항상 이 비율로 스케일 */
+  width: 2160px;
+  height: 3840px;
+  background: #0d0d14; 
+  background-size: cover;
+  background-position: center;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  justify-content: center; 
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform-origin: 50% 50%;
+  overflow: hidden;
+}
+
+.scr { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+.scr.on { display: flex; }
+
+/* 이모지 대체 아이콘 */
+.ico {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  vertical-align: -18px;
+}
+.ico.sm { width: 54px; height: 54px; vertical-align: -12px; }
+.ico.xs { width: 42px; height: 42px; vertical-align: -10px; }
+
+/* 시작 화면 */
+#ss { gap: 60px; padding: 120px 60px; }
+.gtitle { font-size: 20rem; font-weight: 800; color: #fff; text-align: center; }
+.gtitle span { color: #f0c040; }
+.gdesc { font-size: 5rem; color: #999; text-align: center; line-height: 1.8; max-width: 900px; }
+.tags { display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; max-width: 1500px; }
+.tag { background: #1e1e2c; color: #aaa; font-size: 4rem; padding: 10px 22px; border-radius: 60px; border: 3px solid #333; }
+.tag.asy { border-color: #ff555566; color: #ff9999; background: #2a1010; }
+.wtag { background: #2a1800; color: #f0a040; font-size: 5rem; padding: 20px 48px; border-radius: 60px; border: 3px solid #f0a04044; }
+.sbtn { margin-top: 48px; padding: 48px 156px; font-size: 5rem; font-weight: 800; background: #f0c040; color: #111; border: none; border-radius: 150px; cursor: pointer; transition: transform 0.2s; }
+.sbtn:hover { background: #ffd84d; transform: scale(1.03); }
+
+/* 게임 화면 */
+#gs { padding: 60px 50px; gap: 0; justify-content: flex-start; }
+.hud { width: 100%; height: 30vh; display: flex; justify-content: space-between; align-items: center; padding: 0 20px 40px; }
+.hi { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.hl { font-size: 5rem; color: #555; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+.hv { font-size: 10rem; font-weight: 700; color: #fff; }
+.hv.tim { color: #f0c040; }
+.hv.urg { color: #ff5555; animation: pu .4s ease infinite alternate; }
+@keyframes pu { from{opacity:1}to{opacity:.4} }
+.dots { display: flex; gap: 18px; }
+.dot { width: 30px; height: 30px; border-radius: 50%; background: #2a2a3a; transition: background .3s; }
+.dot.done { background: #f0c040; }
+.dot.cur { background: #fff; box-shadow: 0 0 18px #fff8; }
+
+.cwrap { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; }
+#gc { border-radius: 36px; cursor: crosshair; touch-action: none; display: block; }
+.mover { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); background: rgba(0,0,0,.88); color: #fff; font-size: 66px; font-weight: 800; padding: 42px 84px; border-radius: 42px; pointer-events: none; white-space: nowrap; opacity: 0; transition: opacity .2s; }
+.mover.on { opacity: 1; }
+.inst { font-size: 7rem; color: #777; margin-top: 50px; text-align: center; font-weight: 500; }
+
+/* 결과 화면 */
+#rs { gap: 48px; padding: 84px 60px; }
+.rtitle { font-size: 10rem; font-weight: 800; color: #fff; }
+.slist { width: 100%; max-width: 960px; display: flex; flex-direction: column; gap: 24px; }
+.srow { display: flex; align-items: center; justify-content: space-between; background: #161622; border-radius: 30px; padding: 30px 42px; }
+.srl { display: flex; align-items: center; gap: 30px; }
+.slabel { font-size: 5rem; color: #ccc; font-weight: 600; }
+.spct { font-size: 3rem; color: #666; margin-top: 8px; }
+.spts { font-size: 6rem; font-weight: 800; color: #f0c040; }
+.total { width: 100%; max-width: 960px; background: #1a1a28; border-radius: 42px; padding: 60px; display: flex; flex-direction: column; align-items: center; gap: 12px; border: 3px solid #f0c04030; }
+.tlabel { font-size: 5rem; color: #777; font-weight: 500; }
+.tval { font-size: 10rem; font-weight: 800; color: #f0c040; line-height: 1.1; }
+.tgrade { font-size: 6rem; font-weight: 700; color: #fff; margin-top: 10px; }
+.rbtn { padding: 48px 156px; font-size: 6rem; font-weight: 800; background: #f0c040; color: #111; border: none; border-radius: 150px; cursor: pointer; margin-top: 24px; }
+.rbtn:hover { background: #ffd84d; }
+.rbtn:disabled { background: #555; color: #999; cursor: not-allowed; }
+
+/* 점수 등록 버튼 (다시 하기와 동일 스타일의 보조 버튼) */
+.rbtn.alt { background: #1e1e2c; color: #f0c040; border: 4px solid #f0c040; }
+.rbtn.alt:hover { background: #2a2a3a; }
+.rbtn.alt:disabled { background: #1a1a22; color: #555; border-color: #444; cursor: not-allowed; }
+
+/* 닉네임 등록 모달 (Alert 스타일 오버레이) */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.78); display: none; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.modal-overlay.on { display: flex; }
+.modal-card { width: min(1500px, 90%); background: #161622; border-radius: 60px; padding: 96px 84px; display: flex; flex-direction: column; align-items: center; gap: 48px; border: 4px solid #f0c04055; box-shadow: 0 60px 180px rgba(0,0,0,0.7); }
+.modal-title { font-size: 7rem; font-weight: 800; color: #fff; text-align: center; }
+.modal-sub { font-size: 4.2rem; color: #888; text-align: center; line-height: 1.4; }
+.nickinput { width: 100%; max-width: 1100px; font-size: 6rem; padding: 48px 60px; background: #0d0d14; color: #fff; border: 4px solid #333; border-radius: 36px; text-align: center; font-family: inherit; outline: none; }
+.nickinput:focus { border-color: #f0c040; }
+.modal-btnrow { display: flex; gap: 36px; width: 100%; justify-content: center; flex-wrap: wrap; }
+.modal-btn { padding: 42px 96px; font-size: 5.5rem; font-weight: 800; border: none; border-radius: 120px; cursor: pointer; white-space: nowrap; }
+.modal-btn.primary { background: #f0c040; color: #111; }
+.modal-btn.primary:hover { background: #ffd84d; }
+.modal-btn.primary:disabled { background: #555; color: #999; cursor: not-allowed; }
+.modal-btn.ghost { background: transparent; color: #aaa; border: 4px solid #444; }
+.modal-btn.ghost:hover { background: #222; color: #fff; }
+.nickmsg { font-size: 4.2rem; color: #aaa; min-height: 1.2em; text-align: center; }
+.nickmsg.ok { color: #4CAF50; }
+.nickmsg.warn { color: #f0a040; }
+.nickmsg.err { color: #ff5555; }
+</style>
+</head>
+<body>
+
+<div id="gr">
+  <div id="ss" class="scr on">
+    <div class="gtitle"><span>반반</span> 챌린지</div>
+    <p class="gdesc">안성의 5대 농특산물을 <br>정확히 <strong style="color:#f0c040">절반</strong>으로 잘라보세요!
+    <div class="tags">
+      <span class="tag"><img class="ico xs" src="./public/rice.png" alt=""> 쌀</span>
+      <span class="tag"><img class="ico xs" src="./public/pear.png" alt=""> 배</span>
+      <span class="tag"><img class="ico xs" src="./public/grape.png" alt=""> 포도</span>
+      <span class="tag"><img class="ico xs" src="./public/insam.png" alt=""> 인삼</span>
+      <span class="tag"><img class="ico xs" src="./public/hanwoo.png" alt=""> 한우</span>
+    </div>
+    <button class="sbtn" id="startBtn">게임 시작</button>
+    <button class="sbtn" id="backBtn" style="margin-top: 40px; background: #444; color: #fff;" onclick="location.href='../../index.html'">돌아가기</button>
+  </div>
+
+  <div id="gs" class="scr">
+    <div class="hud">
+      <div class="hi"><span class="hl">라운드</span><span class="hv" id="rdis">1 / 5</span></div>
+      <div class="hi"><div class="dots" id="dotbox"></div></div>
+      <div class="hi"><span class="hl">남은 시간</span><span class="hv tim" id="tdis">3</span></div>
+    </div>
+    <div class="cwrap">
+      <canvas id="gc" width="1960" height="2800"></canvas>
+      <div class="mover" id="mover"></div>
+    </div>
+    <p class="inst" id="inst">드래그로 선을 그어 잘라보세요</p>
+  </div>
+
+  <div id="rs" class="scr">
+    <div class="rtitle">게임 결과</div>
+    <div class="slist" id="slist"></div>
+    <div class="total">
+      <span class="tlabel">총점</span>
+      <span class="tval" id="tscore">0</span>
+      <span class="tgrade" id="tgrade"></span>
+    </div>
+    <button class="rbtn" id="registerBtn">점수 등록</button>
+    <button class="rbtn alt" id="againBtn">다시 하기</button>
+  </div>
+
+  <div class="modal-overlay" id="nickModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-title" id="modalTitle">닉네임 등록</div>
+      <div class="modal-sub">랭킹에 표시될 닉네임을 입력하세요<br><span id="modalScore" style="color:#f0c040;font-weight:700;"></span></div>
+      <input class="nickinput" id="nickInput" type="text" maxlength="20" placeholder="닉네임 (최대 20자)" autocomplete="off" readonly inputmode="none">
+      <div class="nickmsg" id="nickMsg"></div>
+      <div class="kkb" id="kkb"></div>
+      <div class="modal-btnrow">
+        <button class="modal-btn ghost" id="cancelBtn">취소</button>
+        <button class="modal-btn primary" id="saveBtn">등록</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/hangul.min.js"></script>
+<script src="../../assets/kiosk-keyboard.js"></script>
+<script>
+function resizeKiosk() {
+  var vw = document.documentElement.clientWidth || window.innerWidth;
+  var vh = document.documentElement.clientHeight || window.innerHeight;
+  var scale = Math.min(vw / 2160, vh / 3840);
+  var gr = document.getElementById('gr');
+  gr.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+}
+window.addEventListener('resize', resizeKiosk);
+resizeKiosk();
+
+(function() {
+  var CW = 1960, CH = 2800, SF = 2.9; 
+
+  var canvas = document.getElementById('gc');
+  var ctx = canvas.getContext('2d');
+  var mover = document.getElementById('mover');
+
+  var SHAPES = [
+    // maxSide: 게임에서 차지할 "최대 변 길이"(비율 유지)
+    { name:'쌀',   type:'rice',   img:'./public/rice.png',   maxSide: 500 },
+    { name:'배',   type:'pear',   img:'./public/pear.png',   maxSide: 500 },
+    { name:'포도', type:'grape',  img:'./public/grape.png',  maxSide: 500 },
+    { name:'인삼', type:'insam',  img:'./public/insam.png',  maxSide: 500 },
+    { name:'한우', type:'hanwoo', img:'./public/hanwoo.png', maxSide: 500 }
+  ];
+
+  function escHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  function iconHtml(sh, cls) {
+    var c = cls || 'ico';
+    return '<img class="'+c+'" src="'+escHtml(sh.img)+'" alt="'+escHtml(sh.name)+'">';
+  }
+
+  var IMG_CACHE = {};
+  var POLY_CACHE = {};
+
+  // 동일 src를 가진 DOM <img>가 이미 페이지에 있으면 그것을 재사용한다.
+  // 시작 화면의 태그(<img src="./public/...">)가 항상 먼저 로드되므로,
+  // file:// 프로토콜이나 캐시 이슈로 new Image()가 실패하는 환경에서도
+  // 캔버스 렌더링이 동작하도록 안전한 폴백 역할을 한다.
+  function findDomImg(src) {
+    var imgs = document.querySelectorAll('img');
+    for (var i = 0; i < imgs.length; i++) {
+      var s = imgs[i].getAttribute('src') || '';
+      if (s === src || imgs[i].src.indexOf(src.replace('./','')) !== -1) return imgs[i];
+    }
+    return null;
+  }
+
+  function getImg(src) {
+    if (IMG_CACHE[src]) return IMG_CACHE[src];
+    var dom = findDomImg(src);
+    if (dom) {
+      IMG_CACHE[src] = dom;
+      return dom;
+    }
+    var im = new Image();
+    // 동일 출처라면 crossOrigin 미지정이 안전. (file:// + crossOrigin은 로드 실패 유발)
+    im.addEventListener('error', function() {
+      console.error('[HalfGame] 이미지 로드 실패:', src);
+      // 에러 시 DOM에서 같은 src를 찾아 캐시를 교체 시도
+      var d = findDomImg(src);
+      if (d) IMG_CACHE[src] = d;
+    });
+    im.src = src;
+    IMG_CACHE[src] = im;
+    return im;
+  }
+
+  // 스크립트 시작 시점에 모든 SHAPE 이미지를 미리 캐시 채워둔다.
+  // (DOM <img>가 있으면 그것을, 없으면 새 Image()를 캐시한다.)
+  for (var __i = 0; __i < SHAPES.length; __i++) getImg(SHAPES[__i].img);
+
+  function getDrawDims(sh) {
+    var img = getImg(sh.img);
+    var mw = img && img.naturalWidth ? img.naturalWidth : 0;
+    var mh = img && img.naturalHeight ? img.naturalHeight : 0;
+    var maxSide = sh.maxSide || 380;
+    if (mw > 0 && mh > 0) {
+      var s = maxSide / Math.max(mw, mh);
+      return { w: mw * s, h: mh * s };
+    }
+    // 로딩 전 임시값(비율 미정): 정사각으로 잡되, 로드 후 자동 교체됨
+    return { w: maxSide, h: maxSide };
+  }
+
+  var state = {
+    round:0, scores:[], timer:3, ticker:null,
+    drag:false, x1:0,y1:0,x2:0,y2:0,
+    done:false, order:[], tf:null, poly:null, shape:null
+  };
+
+  function shuffle(a) {
+    var arr = a.slice();
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+    }
+    return arr;
+  }
+
+  function showScr(id) {
+    var screens = document.querySelectorAll('.scr');
+    for (var i = 0; i < screens.length; i++) screens[i].classList.remove('on');
+    document.getElementById(id).classList.add('on');
+  }
+
+  function randTf() {
+    // 1. 스케일을 먼저 계산합니다.
+    var scale = (0.78 + Math.random() * 0.18) * SF;
+
+    // 2. 오브젝트 실제 크기(비율 유지 렌더 크기)를 기반으로,
+    //    회전해도 캔버스 밖으로 튀지 않도록 "최대 반경(대각/2)"을 계산합니다.
+    var d0 = state && state.shape ? getDrawDims(state.shape) : { w: 320, h: 320 };
+    var baseRadius = Math.sqrt(d0.w*d0.w + d0.h*d0.h) / 2;
+    var maxObjRadius = baseRadius * scale;
+    
+    // 3. 화면 테두리에서 무조건 떨어져야 하는 최소 여백(Padding)을 설정합니다.
+    var padding = 140;
+
+    // 4. 오브젝트가 화면 밖으로 나가지 않는 '안전한 중심점의 최대 이동 범위'를 계산합니다.
+    var limitX = (CW / 2) - maxObjRadius - padding;
+    var limitY = (CH / 2) - maxObjRadius - padding;
+    
+    // (오브젝트가 너무 커서 한계선이 음수가 되는 것을 방지하여 최소 0(정중앙)으로 고정)
+    limitX = Math.max(0, limitX);
+    limitY = Math.max(0, limitY);
+
+    // 5. 안전 범위 안에서 무작위 좌표를 부여합니다.
+    var ox = (Math.random() * 2 - 1) * limitX;
+    var oy = (Math.random() * 2 - 1) * limitY;
+    
+    var angle = (25 + Math.random() * 130) * Math.PI / 180;
+    
+    return { ox: ox, oy: oy, angle: angle, scale: scale };
+  }
+
+  function ellipsePoly(cx, cy, rx, ry, n) {
+    var pts = [];
+    for (var i = 0; i < n; i++) {
+      var a = (2 * Math.PI * i) / n;
+      pts.push({ x: cx + rx * Math.cos(a), y: cy + ry * Math.sin(a) });
+    }
+    return pts;
+  }
+
+  function distSq(a, b) {
+    var dx = a.x - b.x, dy = a.y - b.y;
+    return dx*dx + dy*dy;
+  }
+
+  function simplifyRadial(pts, tol) {
+    if (!pts || pts.length < 3) return pts || [];
+    var out = [pts[0]], t2 = tol * tol, prev = pts[0];
+    for (var i = 1; i < pts.length; i++) {
+      if (distSq(pts[i], prev) >= t2) {
+        out.push(pts[i]);
+        prev = pts[i];
+      }
+    }
+    if (out.length > 1 && distSq(out[0], out[out.length - 1]) < t2) out.pop();
+    return out;
+  }
+
+  function pointSegDistSq(p, a, b) {
+    var dx = b.x - a.x, dy = b.y - a.y;
+    if (dx === 0 && dy === 0) return distSq(p, a);
+    var t = ((p.x - a.x)*dx + (p.y - a.y)*dy) / (dx*dx + dy*dy);
+    t = Math.max(0, Math.min(1, t));
+    var qx = a.x + t*dx, qy = a.y + t*dy;
+    var sx = p.x - qx, sy = p.y - qy;
+    return sx*sx + sy*sy;
+  }
+
+  function simplifyDP(pts, tol) {
+    if (!pts || pts.length < 3) return pts || [];
+    var t2 = tol * tol;
+    var keep = new Array(pts.length);
+    keep[0] = true; keep[pts.length - 1] = true;
+    var stack = [{a:0, b:pts.length - 1}];
+    while (stack.length) {
+      var seg = stack.pop(), a = seg.a, b = seg.b;
+      var maxD = 0, idx = -1;
+      for (var i = a + 1; i < b; i++) {
+        var d = pointSegDistSq(pts[i], pts[a], pts[b]);
+        if (d > maxD) { maxD = d; idx = i; }
+      }
+      if (idx >= 0 && maxD > t2) {
+        keep[idx] = true;
+        stack.push({a:a, b:idx});
+        stack.push({a:idx, b:b});
+      }
+    }
+    var out = [];
+    for (var k = 0; k < pts.length; k++) if (keep[k]) out.push(pts[k]);
+    return out;
+  }
+
+  function simplifyClosedPoly(pts, tol) {
+    if (!pts || pts.length < 8) return pts || [];
+    var ring = pts.slice();
+    ring.push(pts[0]);
+    ring = simplifyRadial(ring, tol);
+    ring = simplifyDP(ring, tol);
+    if (ring.length > 1) ring.pop();
+    return ring.length >= 8 ? ring : pts;
+  }
+
+  function traceMaskContour(mask, w, h) {
+    function on(x, y) { return x >= 0 && y >= 0 && x < w && y < h && mask[y*w + x] === 1; }
+    function boundary(x, y) {
+      if (!on(x, y)) return false;
+      return !on(x-1, y) || !on(x+1, y) || !on(x, y-1) || !on(x, y+1);
+    }
+    var sx = -1, sy = -1;
+    for (var yy = 0; yy < h; yy++) {
+      for (var xx = 0; xx < w; xx++) {
+        if (boundary(xx, yy)) { sx = xx; sy = yy; break; }
+      }
+      if (sx >= 0) break;
+    }
+    if (sx < 0) return null;
+
+    var dirs = [
+      {x:1,y:0}, {x:1,y:1}, {x:0,y:1}, {x:-1,y:1},
+      {x:-1,y:0}, {x:-1,y:-1}, {x:0,y:-1}, {x:1,y:-1}
+    ];
+    function dirIdx(dx, dy) {
+      for (var i = 0; i < 8; i++) if (dirs[i].x === dx && dirs[i].y === dy) return i;
+      return 4;
+    }
+
+    var p = {x:sx, y:sy};
+    var b = {x:sx - 1, y:sy};
+    var startP = {x:p.x, y:p.y};
+    var startB = {x:b.x, y:b.y};
+    var contour = [{x:p.x, y:p.y}];
+    var maxSteps = w * h * 2;
+
+    for (var step = 0; step < maxSteps; step++) {
+      var bi = dirIdx(b.x - p.x, b.y - p.y);
+      var found = false, nextP = null, nextB = null;
+      for (var s = 1; s <= 8; s++) {
+        var ni = (bi + s) % 8;
+        var nx = p.x + dirs[ni].x, ny = p.y + dirs[ni].y;
+        if (on(nx, ny)) {
+          found = true;
+          nextP = {x:nx, y:ny};
+          var pi = (ni + 7) % 8;
+          nextB = {x:p.x + dirs[pi].x, y:p.y + dirs[pi].y};
+          break;
+        }
+      }
+      if (!found) break;
+      p = nextP; b = nextB;
+      contour.push({x:p.x, y:p.y});
+      if (p.x === startP.x && p.y === startP.y && b.x === startB.x && b.y === startB.y) break;
+    }
+    return contour.length >= 8 ? contour : null;
+  }
+
+  function extractAlphaPoly(sh) {
+    var key = sh && sh.img ? sh.img : '';
+    if (key && POLY_CACHE[key]) return POLY_CACHE[key];
+    var img = getImg(sh.img);
+    if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return null;
+
+    var d = getDrawDims(sh);
+    var longer = Math.max(d.w, d.h);
+    var targetLong = Math.min(420, Math.max(220, Math.round(longer)));
+    var s = targetLong / longer;
+    var pw = Math.max(8, Math.round(d.w * s));
+    var ph = Math.max(8, Math.round(d.h * s));
+
+    var oc = (typeof OffscreenCanvas !== 'undefined') ? new OffscreenCanvas(pw, ph) : document.createElement('canvas');
+    oc.width = pw; oc.height = ph;
+    var octx = oc.getContext('2d', { willReadFrequently: true });
+    octx.setTransform(1,0,0,1,0,0);
+    octx.clearRect(0,0,pw,ph);
+    octx.imageSmoothingEnabled = true;
+    octx.drawImage(img, 0, 0, pw, ph);
+
+    var data;
+    try {
+      data = octx.getImageData(0, 0, pw, ph).data;
+    } catch (err) {
+      return null;
+    }
+
+    var mask = new Uint8Array(pw * ph);
+    var thr = 18;
+    for (var i = 0, p = 0; p < mask.length; p++, i += 4) mask[p] = data[i + 3] > thr ? 1 : 0;
+    var contour = traceMaskContour(mask, pw, ph);
+    if (!contour) return null;
+
+    var simp = simplifyClosedPoly(contour, 1.4);
+    var sx = d.w / pw, sy = d.h / ph;
+    var poly = simp.map(function(pt) {
+      return { x: (pt.x + 0.5) * sx - d.w/2, y: (pt.y + 0.5) * sy - d.h/2 };
+    });
+    if (poly.length < 8) return null;
+    if (key) POLY_CACHE[key] = poly;
+    return poly;
+  }
+
+  function localPoly(sh) {
+    var exact = sh ? extractAlphaPoly(sh) : null;
+    if (exact && exact.length >= 8) return exact;
+    var d = sh ? getDrawDims(sh) : { w: 320, h: 320 };
+    var rx = d.w / 2;
+    var ry = d.h / 2;
+    return ellipsePoly(0, 0, rx, ry, 64);
+  }
+
+  function transformPoly(pts, tf) {
+    var cx = CW/2 + tf.ox, cy = CH/2 + tf.oy;
+    var cos = Math.cos(tf.angle), sin = Math.sin(tf.angle);
+    return pts.map(function(p) {
+      var rx = p.x * tf.scale, ry = p.y * tf.scale;
+      return { x: cx + rx*cos - ry*sin, y: cy + rx*sin + ry*cos };
+    });
+  }
+
+  function drawBG(type) {
+    var bgs = {
+      rice:   ['#07140a','#07140a'],
+      pear:   ['#07140a','#07140a'],
+      grape:  ['#07140a','#07140a'],
+      insam:  ['#07140a','#07140a'],
+      hanwoo: ['#07140a','#07140a']
+    };
+    var bg = bgs[type] || ['#0d0d14','#111120'];
+    var g = ctx.createLinearGradient(0, 0, 0, CH);
+    g.addColorStop(0, bg[0]); g.addColorStop(1, bg[1]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, CW, CH);
+    
+    ctx.strokeStyle = 'rgba(255,255,255,0.025)'; ctx.lineWidth = 3;
+    for (var x = 0; x < CW; x += 120) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,CH); ctx.stroke(); }
+    for (var y = 0; y < CH; y += 120) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(CW,y); ctx.stroke(); }
+  }
+
+  function applyTf(tf) {
+    ctx.translate(CW/2 + tf.ox, CH/2 + tf.oy);
+    ctx.rotate(tf.angle);
+    ctx.scale(tf.scale, tf.scale);
+  }
+
+  function drawShapeImg(sh) {
+    var img = getImg(sh.img);
+    if (!img) return;
+    // 로딩 전이면 로드 완료 시 한 번 더 렌더/폴리 업데이트
+    if (!img.complete || !img.naturalWidth || !img.naturalHeight) {
+      if (!img.__halfGameBound) {
+        img.__halfGameBound = true;
+        img.addEventListener('load', function() {
+          // 현재 라운드의 폴리곤/화면을 이미지 비율에 맞춰 갱신
+          if (state && state.tf && state.shape && state.shape.img === sh.img) {
+            state.poly = transformPoly(localPoly(state.shape), state.tf);
+            render();
+          }
+        }, { once: true });
+      }
+      return;
+    }
+    var d = getDrawDims(sh);
+    ctx.imageSmoothingEnabled = true;
+    ctx.drawImage(img, -d.w/2, -d.h/2, d.w, d.h);
+  }
+
+  function render(cutLine, cutColor) {
+    var sh = state.shape, tf = state.tf;
+    drawBG(sh.type);
+
+    ctx.save(); ctx.globalAlpha = 0.22;
+    ctx.translate(CW/2 + tf.ox + 15, CH/2 + tf.oy + 25);
+    ctx.rotate(tf.angle); ctx.scale(tf.scale, tf.scale);
+    ctx.fillStyle = '#000';
+    ctx.beginPath(); ctx.ellipse(0, 20, 100, 95, 0, 0, Math.PI*2); ctx.fill();
+    ctx.globalAlpha = 1; ctx.restore();
+
+    ctx.save(); applyTf(tf); drawShapeImg(sh); ctx.restore();
+
+    var cx2 = CW/2 + tf.ox, cy2 = CH/2 + tf.oy;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.28)'; ctx.lineWidth = 4; ctx.setLineDash([9,15]);
+    ctx.beginPath(); ctx.arc(cx2, cy2, 20, 0, Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]); ctx.restore();
+
+    if (cutLine) {
+      ctx.save();
+      ctx.strokeStyle = cutColor || 'rgba(255,255,255,0.85)';
+      ctx.lineWidth = 14; ctx.shadowColor = cutColor || '#fff'; ctx.shadowBlur = 34;
+      ctx.beginPath(); ctx.moveTo(cutLine.x1, cutLine.y1); ctx.lineTo(cutLine.x2, cutLine.y2); ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function polyArea(pts) {
+    var a = 0, n = pts.length;
+    for (var i = 0; i < n; i++) {
+      var j = (i+1)%n;
+      a += pts[i].x * pts[j].y - pts[j].x * pts[i].y;
+    }
+    return Math.abs(a/2);
+  }
+
+  function ptSide(p1, p2, p) { return (p2.x-p1.x)*(p.y-p1.y) - (p2.y-p1.y)*(p.x-p1.x); }
+
+  function segIntersect(lp1, lp2, ep1, ep2) {
+    var dx1=lp2.x-lp1.x, dy1=lp2.y-lp1.y, dx2=ep2.x-ep1.x, dy2=ep2.y-ep1.y, d = dx1*dy2 - dy1*dx2;
+    if (Math.abs(d) < 1e-10) return ep1;
+    var t = ((ep1.x-lp1.x)*dy2 - (ep1.y-lp1.y)*dx2) / d;
+    return { x: lp1.x + t*dx1, y: lp1.y + t*dy1 };
+  }
+
+  function clipPoly(poly, p1, p2) {
+    var n = poly.length, out = [];
+    for (var i = 0; i < n; i++) {
+      var cur = poly[i], prev = poly[(i+n-1)%n], ci = ptSide(p1,p2,cur) >= 0, pi = ptSide(p1,p2,prev) >= 0;
+      if (ci) { if (!pi) out.push(segIntersect(p1,p2,prev,cur)); out.push(cur); }
+      else if (pi) out.push(segIntersect(p1,p2,prev,cur));
+    }
+    return out;
+  }
+
+  // 점이 폴리곤 내부에 있는지 검사(레이 캐스팅)
+  function pointInPoly(px, py, poly) {
+    var inside = false, n = poly.length;
+    for (var i = 0, j = n - 1; i < n; j = i++) {
+      var xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+      var denom = (yj - yi) || 1e-10;
+      var intersect = ((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / denom + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  // 드래그가 이미지 전체를 가로질렀는지 판정.
+  // - 양쪽 끝점이 모두 이미지 폴리곤 밖에 있어야 하고,
+  // - 선분이 폴리곤과 실제로 교차해야 한다(단순히 옆을 스쳐 지나간 경우 제외).
+  function isFullCrossing(x1, y1, x2, y2, poly) {
+    if (pointInPoly(x1, y1, poly)) return false;
+    if (pointInPoly(x2, y2, poly)) return false;
+    var clipped = clipPoly(poly, {x:x1,y:y1}, {x:x2,y:y2});
+    if (!clipped || clipped.length < 3) return false;
+    var ca = polyArea(clipped), pa = polyArea(poly);
+    if (pa < 1) return false;
+    var r = ca / pa;
+    // 잘려나간 비율이 양쪽 모두 어느 정도 의미있게 존재해야 "통과"로 인정
+    return r > 0.02 && r < 0.98;
+  }
+
+  function computeRatioPoly(x1,y1,x2,y2,poly) {
+    var dx=x2-x1, dy=y2-y1;
+    if (Math.abs(dx)<1 && Math.abs(dy)<1) return 0;
+    var total = polyArea(poly);
+    if (total < 1) return 0;
+    var clipped = clipPoly(poly, {x:x1,y:y1}, {x:x2,y:y2});
+    if (!clipped || clipped.length < 3) return 0;
+    return Math.max(0, Math.min(1, polyArea(clipped)/total));
+  }
+
+  // 픽셀 기반 절단 비율(배경투명 PNG의 alpha 픽셀을 선 기준으로 양분)
+  // - 성능: 다운샘플 오프스크린에서 라운드 확정 시 1회만 계산
+  // - 반환: 선의 한쪽(>=0 side) 픽셀 비율 (0~1)
+  var PIX_W = 280;
+  var PIX_S = PIX_W / CW;
+  var PIX_H = Math.max(1, Math.round(CH * PIX_S));
+  var PIX_CAN = (typeof OffscreenCanvas !== 'undefined') ? new OffscreenCanvas(PIX_W, PIX_H) : (function() {
+    var c = document.createElement('canvas'); c.width = PIX_W; c.height = PIX_H; return c;
+  })();
+  var PIX_CTX = PIX_CAN.getContext('2d', { willReadFrequently: true });
+
+  function computeRatioPixels(x1,y1,x2,y2,sh,tf) {
+    var dx=x2-x1, dy=y2-y1;
+    if (Math.abs(dx)<1 && Math.abs(dy)<1) return 0;
+    var img = getImg(sh.img);
+    if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) return null;
+
+    // 오프스크린에 "오브젝트만" 투명 배경으로 렌더
+    PIX_CTX.setTransform(1,0,0,1,0,0);
+    PIX_CTX.clearRect(0,0,PIX_W,PIX_H);
+    PIX_CTX.imageSmoothingEnabled = true;
+
+    var cx = (CW/2 + tf.ox) * PIX_S;
+    var cy = (CH/2 + tf.oy) * PIX_S;
+    PIX_CTX.translate(cx, cy);
+    PIX_CTX.rotate(tf.angle);
+    PIX_CTX.scale(tf.scale * PIX_S, tf.scale * PIX_S);
+    var d = getDrawDims(sh); // main canvas 기준 크기(비율 유지)
+    PIX_CTX.drawImage(img, -d.w/2, -d.h/2, d.w, d.h);
+    PIX_CTX.setTransform(1,0,0,1,0,0);
+
+    var data;
+    try {
+      data = PIX_CTX.getImageData(0,0,PIX_W,PIX_H).data;
+    } catch (err) {
+      // file:// 직접 실행 또는 CORS 설정 문제로 캔버스가 tainted 되면 픽셀 판정을 할 수 없음
+      return null;
+    }
+
+    // 선도 오프스크린 좌표로 변환
+    var lx1 = x1 * PIX_S, ly1 = y1 * PIX_S, lx2 = x2 * PIX_S, ly2 = y2 * PIX_S;
+    var ldx = lx2 - lx1, ldy = ly2 - ly1;
+
+    // 픽셀 중심점 기준 side 계산: (p2-p1)x(p-p1)
+    var pos = 0, neg = 0;
+    var aThr = 18; // 알파 임계(안티앨리어싱 가장자리 노이즈 완화)
+
+    // 전부 순회(약 11만 픽셀). 라운드 확정 시 1회이므로 키오스크에서도 충분히 가벼움.
+    for (var y = 0; y < PIX_H; y++) {
+      var py = y + 0.5;
+      for (var x = 0; x < PIX_W; x++) {
+        var idx = ((y * PIX_W) + x) * 4 + 3;
+        var a = data[idx];
+        if (a <= aThr) continue;
+        var px = x + 0.5;
+        var side = ldx * (py - ly1) - ldy * (px - lx1);
+        if (side >= 0) pos++; else neg++;
+      }
+    }
+
+    var total = pos + neg;
+    if (total <= 0) return 0;
+    return pos / total;
+  }
+
+  function computeRatio(x1,y1,x2,y2,poly) {
+    // 1) 픽셀 기반(우선)
+    if (state && state.shape && state.tf) {
+      var r = computeRatioPixels(x1,y1,x2,y2, state.shape, state.tf);
+      if (typeof r === 'number') return r;
+    }
+    // 2) 폴백(이미지 로딩 전 등)
+    return computeRatioPoly(x1,y1,x2,y2,poly);
+  }
+
+  function startGame() {
+    state.round = 0; state.scores = [];
+    var orderArr = [];
+    for(var i=0; i<SHAPES.length; i++) orderArr.push(i);
+    state.order = shuffle(orderArr);
+    showScr('gs'); startRound();
+  }
+
+  function startRound() {
+    if (state.round >= 5) { showResult(); return; }
+    state.done = false; state.drag = false; clearInterval(state.ticker); updateDots();
+    document.getElementById('rdis').textContent = (state.round+1) + ' / 5';
+    var tel = document.getElementById('tdis');
+    tel.classList.remove('urg'); tel.textContent = '3';
+    hideMover(); document.getElementById('inst').textContent = '드래그로 선을 그어 잘라보세요';
+
+    var idx = state.order[state.round % SHAPES.length];
+    state.shape = SHAPES[idx];
+    canvas.dataset.si = idx;
+    state.tf = randTf();
+    state.poly = transformPoly(localPoly(state.shape), state.tf);
+    render();
+
+    state.timer = 3;
+    state.ticker = setInterval(function() {
+      state.timer--; tel.textContent = state.timer;
+      if (state.timer <= 2) tel.classList.add('urg');
+      if (state.timer <= 0) { clearInterval(state.ticker); if (!state.done) timeOut(); }
+    }, 1000);
+  }
+
+  function finalizeCut() {
+    if (state.done) return;
+    state.done = true; clearInterval(state.ticker);
+
+    // 드래그가 이미지 전체를 가로질러야만 정상 점수 인정.
+    // 일부만 그어 무한직선의 연장이 이미지 중앙을 우연히 통과해 고득점이 나오는 문제 방지.
+    if (!isFullCrossing(state.x1, state.y1, state.x2, state.y2, state.poly)) {
+      state.scores.push({ si: parseInt(canvas.dataset.si), smaller:0, score:0, pct:0, status:'partial' });
+      var pc = '#FF5555';
+      render({x1:state.x1,y1:state.y1,x2:state.x2,y2:state.y2}, pc);
+      showMover('끝까지 잘라보세요! (0점)', pc);
+      // document.getElementById('inst').textContent = '다음 준비 중...';
+      setTimeout(function() { state.round++; startRound(); }, 1700);
+      return;
+    }
+
+    var ratio = computeRatio(state.x1, state.y1, state.x2, state.y2, state.poly);
+    var smaller = Math.min(ratio, 1-ratio), diff = Math.abs(smaller - 0.5);
+    var score = Math.max(0, Math.round(100*(1 - diff/0.5))), pct = Math.round(smaller*100);
+
+    state.scores.push({ si: parseInt(canvas.dataset.si), smaller:smaller, score:score, pct:pct, status:'ok' });
+
+    var color = score>=90?'#4CAF50': score>=70?'#f0c040': score>=40?'#FF9800':'#FF5555';
+    render({x1:state.x1,y1:state.y1,x2:state.x2,y2:state.y2}, color);
+
+    var msg = score>=95? '완벽! '+pct+'% ('+score+'점)':
+              score>=80? '훌륭해! '+pct+'% ('+score+'점)':
+              score>=60? '괜찮아! '+pct+'% ('+score+'점)': '아쉽다! '+pct+'% ('+score+'점)';
+    showMover(msg, color);
+    // document.getElementById('inst').textContent = '다음 준비 중...';
+    setTimeout(function() { state.round++; startRound(); }, 1700);
+  }
+
+  function timeOut() {
+    state.done = true; state.scores.push({ si: parseInt(canvas.dataset.si), smaller:0, score:0, pct:0, status:'timeout' });
+    showMover('시간 초과! (0점)', '#FF5555');
+    setTimeout(function() { state.round++; startRound(); }, 1700);
+  }
+
+  function showResult() {
+    showScr('rs');
+    var list = document.getElementById('slist'); list.innerHTML = ''; var total = 0;
+    for (var i = 0; i < state.scores.length; i++) {
+      var s = state.scores[i], sh = SHAPES[s.si]; total += s.score;
+      var row = document.createElement('div'); row.className = 'srow';
+      var info;
+      if (s.status === 'partial') info = '미완성 절단';
+      else if (s.status === 'timeout' || (s.score===0 && s.pct===0)) info = '시간초과';
+      else info = s.pct+'% 절단';
+      row.innerHTML =
+        '<div class="srl">' +
+          iconHtml(sh, 'ico sm') +
+          '<div><div class="slabel">'+escHtml(sh.name)+'</div><div class="spct">'+escHtml(info)+'</div></div>' +
+        '</div>' +
+        '<span class="spts">'+s.score+'점</span>';
+      list.appendChild(row);
+    }
+    document.getElementById('tscore').textContent = total;
+    var avg = total / 5;
+
+    // 라운드 종료 시점에 총점을 보관하고 등록 버튼을 활성화
+    var regBtn = document.getElementById('registerBtn');
+    regBtn.disabled = false;
+    regBtn.textContent = '점수 등록';
+    regBtn.dataset.score = String(total);
+    regBtn.dataset.saved = '0';
+  }
+
+  // 랭킹 서버 주소. 게임을 file://로 열면 localhost:3000으로, 같은 서버에서 서빙되면 동일 오리진으로 전송.
+  var RANKING_API = (location.protocol === 'http:' || location.protocol === 'https:')
+    ? '/api/ranking'
+    : 'http://localhost:3000/api/ranking';
+  var GAME_INDEX = 2; // 반반 자르기
+
+  function setNickMsg(text, kind) {
+    var el = document.getElementById('nickMsg');
+    el.textContent = text || '';
+    el.className = 'nickmsg' + (kind ? ' ' + kind : '');
+  }
+
+  function openNickModal() {
+    var regBtn = document.getElementById('registerBtn');
+    if (regBtn.dataset.saved === '1') return;
+
+    var modal = document.getElementById('nickModal');
+    var input = document.getElementById('nickInput');
+    var saveBtn = document.getElementById('saveBtn');
+    var cancelBtn = document.getElementById('cancelBtn');
+    var scoreLabel = document.getElementById('modalScore');
+
+    var score = parseInt(regBtn.dataset.score || '0', 10) || 0;
+    scoreLabel.textContent = '내 점수: ' + score + '점';
+
+    input.value = '';
+    input.disabled = false;
+    saveBtn.disabled = false;
+    saveBtn.textContent = '등록';
+    cancelBtn.disabled = false;
+    setNickMsg('');
+
+    modal.classList.add('on');
+    modal.setAttribute('aria-hidden', 'false');
+    Kkb.init(input);
+  }
+
+  function closeNickModal() {
+    var modal = document.getElementById('nickModal');
+    modal.classList.remove('on');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function submitScore() {
+    var input = document.getElementById('nickInput');
+    var saveBtn = document.getElementById('saveBtn');
+    var cancelBtn = document.getElementById('cancelBtn');
+    var regBtn = document.getElementById('registerBtn');
+    var nickname = (input.value || '').trim();
+
+    if (!nickname) { setNickMsg('닉네임을 입력해주세요.', 'err'); return; }
+    if (nickname.length > 20) { setNickMsg('닉네임은 20자 이하여야 합니다.', 'err'); return; }
+
+    var score = parseInt(regBtn.dataset.score || '0', 10) || 0;
+    var imageIndex = Math.floor(Math.random() * 15);
+
+    saveBtn.disabled = true; cancelBtn.disabled = true; input.disabled = true;
+    setNickMsg('등록 중...', '');
+
+    fetch(RANKING_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nickname: nickname,
+        score: score,
+        game_index: GAME_INDEX,
+        image_index: imageIndex
+      })
+    })
+    .then(function(r) { return r.json().then(function(j) { return { ok: r.ok, body: j }; }); })
+    .then(function(res) {
+      if (!res.ok) {
+        var msg = (res.body && res.body.error) ? res.body.error : '등록에 실패했습니다.';
+        setNickMsg(msg, 'err');
+        saveBtn.disabled = false; cancelBtn.disabled = false; input.disabled = false;
+        return;
+      }
+      var saved = res.body.nickname || nickname;
+      if (res.body.tagged) {
+        setNickMsg('중복 닉네임이라 "' + saved + '"(으)로 등록되었습니다.', 'warn');
+      } else {
+        setNickMsg('"' + saved + '" 등록 완료!', 'ok');
+      }
+      regBtn.dataset.saved = '1';
+      regBtn.disabled = true;
+      regBtn.textContent = '등록 완료';
+      setTimeout(closeNickModal, 1400);
+    })
+    .catch(function(err) {
+      console.error('점수 등록 오류:', err);
+      setNickMsg('서버에 연결할 수 없습니다.', 'err');
+      saveBtn.disabled = false; cancelBtn.disabled = false; input.disabled = false;
+    });
+  }
+
+  function showMover(text, color) { mover.textContent=text; mover.style.color=color||'#fff'; mover.classList.add('on'); }
+  function hideMover() { mover.classList.remove('on'); mover.textContent=''; }
+
+  function updateDots() {
+    var db = document.getElementById('dotbox'); db.innerHTML = '';
+    for (var i = 0; i < 5; i++) {
+      var d = document.createElement('div'); d.className = 'dot' + (i<state.round?' done': i===state.round?' cur':''); db.appendChild(d);
+    }
+  }
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function getPos(e) {
+    var rect = canvas.getBoundingClientRect(), sx = canvas.width/rect.width, sy = canvas.height/rect.height;
+    var src = e.touches ? e.touches[0] : e;
+    var x = (src.clientX-rect.left)*sx;
+    var y = (src.clientY-rect.top)*sy;
+    // 캔버스 밖으로 드래그되어도 선이 캔버스 끝에서 끝나도록 클램프
+    return { x: clamp(x, 0, canvas.width), y: clamp(y, 0, canvas.height) };
+  }
+
+  canvas.addEventListener('mousedown', function(e) { if (state.done || state.timer<=0) return; var p=getPos(e); state.drag=true; state.x1=p.x; state.y1=p.y; state.x2=p.x; state.y2=p.y; });
+  canvas.addEventListener('mousemove', function(e) { if (!state.drag || state.done) return; var p=getPos(e); state.x2=p.x; state.y2=p.y; render({x1:state.x1,y1:state.y1,x2:state.x2,y2:state.y2},'rgba(255,255,255,0.85)'); });
+  canvas.addEventListener('mouseup', function(e) { if (!state.drag || state.done) return; state.drag=false; finalizeCut(); });
+  canvas.addEventListener('touchstart', function(e) { e.preventDefault(); if (state.done || state.timer<=0) return; var p=getPos(e); state.drag=true; state.x1=p.x; state.y1=p.y; state.x2=p.x; state.y2=p.y; }, {passive:false});
+  canvas.addEventListener('touchmove', function(e) { e.preventDefault(); if (!state.drag || state.done) return; var p=getPos(e); state.x2=p.x; state.y2=p.y; render({x1:state.x1,y1:state.y1,x2:state.x2,y2:state.y2},'rgba(255,255,255,0.85)'); }, {passive:false});
+  canvas.addEventListener('touchend', function(e) {
+    e.preventDefault(); if (!state.drag || state.done) return; state.drag=false;
+    var t=e.changedTouches[0]; var rect=canvas.getBoundingClientRect();
+    var x2=(t.clientX-rect.left)*(canvas.width/rect.width);
+    var y2=(t.clientY-rect.top)*(canvas.height/rect.height);
+    state.x2 = clamp(x2, 0, canvas.width);
+    state.y2 = clamp(y2, 0, canvas.height);
+    finalizeCut();
+  }, {passive:false});
+
+  // [수정됨] 버튼에 touchstart 이벤트 추가 (빠른 터치 반응)
+  function bindBtn(id, fn) {
+    var btn = document.getElementById(id);
+    btn.addEventListener('click', fn);
+    btn.addEventListener('touchstart', function(e) { e.preventDefault(); fn(); }, {passive: false});
+  }
+  
+  bindBtn('startBtn', startGame);
+  bindBtn('againBtn', function() { showScr('ss'); });
+  bindBtn('registerBtn', openNickModal);
+  bindBtn('saveBtn', submitScore);
+  bindBtn('cancelBtn', closeNickModal);
+
+  // 모달 바깥(오버레이) 클릭 시 닫기
+  document.getElementById('nickModal').addEventListener('click', function(e) {
+    if (e.target === this) closeNickModal();
+  });
+
+  document.getElementById('nickInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') { e.preventDefault(); submitScore(); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeNickModal(); }
+  });
+
+})();
+</script>
+</body>
+</html>

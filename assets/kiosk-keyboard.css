@@ -1,0 +1,12 @@
+/* ===== 키오스크 한글 가상 키보드 ===== */
+.kkb{width:100%;background:#0d0d14;border:4px solid #2a2a3a;border-radius:36px;padding:24px;display:flex;flex-direction:column;gap:14px;user-select:none}
+.kkb-row{display:flex;gap:12px;justify-content:center}
+.kkb-key{flex:1;min-width:0;height:150px;font-size:4.2rem;font-weight:800;background:#1e1e2c;color:#fff;border:3px solid #333;border-radius:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;font-family:inherit;line-height:1;transition:transform .08s ease}
+.kkb-key:active{transform:scale(.94);background:#f0c040;color:#111;border-color:#f0c040}
+.kkb-ctrl{flex:1.5;font-size:3.0rem;background:#2a2a3a;color:#ddd}
+.kkb-space{flex:5;background:#2a2a3a;color:#ddd;font-size:3.4rem}
+.kkb-active{background:#f0c040 !important;color:#111 !important;border-color:#f0c040 !important}
+.kkb-lang{flex:1.8;font-size:3.4rem;background:#2a2a3a;color:#f0c040;font-weight:800}
+/* 닉네임 입력은 가상 키보드로만 입력받음 */
+.nickinput{caret-color:#f0c040}
+.nickinput[readonly]{cursor:default;background:#0d0d14}
